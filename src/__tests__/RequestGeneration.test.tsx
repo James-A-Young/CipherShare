@@ -1,12 +1,13 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
+import { vi } from "vitest";
 import RequestGeneration from "../../src/components/RequestGeneration";
 import { api } from "../../src/api";
 
-// Mock the API
-jest.mock("../../src/api");
-const mockedApi = api as jest.Mocked<typeof api>;
+// Mock the API (use Vitest's `vi`)
+vi.mock("../../src/api");
+const mockedApi = api as unknown as Record<string, any>;
 
 describe("RequestGeneration Component", () => {
   const renderComponent = () => {
@@ -18,7 +19,7 @@ describe("RequestGeneration Component", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("renders the form correctly", () => {

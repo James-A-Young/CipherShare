@@ -1,5 +1,3 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 export interface CreateRequestPayload {
   requestorEmail: string;
@@ -41,6 +39,13 @@ export interface RetrieveSecretResponse {
   secret: string;
   viewsRemaining?: number;
 }
+
+const API_BASE_URL =
+  (typeof process !== "undefined" &&
+    (process.env.VITE_API_URL || process.env.API_BASE_URL)) ||
+  (typeof (globalThis as any).importMetaEnv !== "undefined" &&
+    (globalThis as any).importMetaEnv?.VITE_API_URL) ||
+  "http://localhost:3001/api";
 
 export const api = {
   async createRequest(payload: CreateRequestPayload): Promise<RequestResponse> {

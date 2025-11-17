@@ -6,7 +6,8 @@ export default {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
+  // Only run server-side tests with Jest. Frontend tests use Vitest.
+  testMatch: ['<rootDir>/server/**/?(*.)+(spec|test).[tj]s?(x)'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     'server/**/*.{ts,tsx}',
