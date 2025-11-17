@@ -1,0 +1,366 @@
+# 📝 CipherShare - Developer Quick Reference
+
+## 🚀 Quick Commands
+
+```bash
+# Setup
+npm install                    # Install dependencies
+docker-compose up -d          # Start Redis
+npm run dev                   # Start dev servers
+npm test                      # Run tests
+
+# Development
+npm run dev:client            # Frontend only (Vite)
+npm run dev:server            # Backend only (Express)
+npm run test:watch            # Tests in watch mode
+
+# Production
+npm run build                 # Build for production
+docker-compose -f docker-compose.prod.yml up -d  # Deploy
+
+# Utilities
+./scripts/setup.sh            # Complete dev setup
+./scripts/generate-key.sh     # Generate secure key
+```
+
+## 🌐 Local URLs
+
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:3001
+- **Health Check**: http://localhost:3001/api/health
+- **Redis**: localhost:6379
+
+## 📁 Key Files
+
+### Frontend
+
+- `src/App.tsx` - Main app with routing
+- `src/components/RequestGeneration.tsx` - Create requests
+- `src/components/SecretSubmission.tsx` - Submit secrets
+- `src/components/SecretRetrieval.tsx` - Retrieve secrets
+- `src/api.ts` - API client functions
+
+### Backend
+
+- `server/index.ts` - Express server & routes
+- `server/crypto.service.ts` - Encryption logic
+- `server/redis.service.ts` - Data persistence
+- `server/email.service.ts` - SendGrid emails
+- `server/types.ts` - TypeScript types
+
+### Config
+
+- `.env` - Environment variables
+- `vite.config.ts` - Vite configuration
+- `tsconfig.json` - TypeScript settings
+- `tailwind.config.js` - Tailwind CSS
+- `docker-compose.yml` - Docker services
+
+## 🔐 API Endpoints
+
+### Create Request
+
+```bash
+POST /api/requests
+{
+  "requestorEmail": "user@example.com",
+  "description": "Secret description",
+  "retentionType": "time",
+  "retentionValue": 5
+}
+```
+
+### Get Request
+
+```bash
+GET /api/requests/:requestId
+```
+
+### Submit Secret
+
+```bash
+POST /api/requests/:requestId/submit
+{
+  "submitterEmail": "submitter@example.com",
+  "password": "StrongPass123!",
+  "confirmPassword": "StrongPass123!",
+  "secret": "The actual secret"
+}
+```
+
+### Retrieve Secret
+
+```bash
+POST /api/secrets/:retrievalId
+{
+  "password": "StrongPass123!"
+}
+```
+
+## 🔒 Environment Variables
+
+```env
+# Required
+SYSTEM_SECRET_KEY=<64-char-hex>
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Optional (for email)
+SENDGRID_API_KEY=<your-key>
+SENDGRID_FROM_EMAIL=noreply@domain.com
+
+# Server
+PORT=3001
+CLIENT_URL=http://localhost:5173
+```
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+npm test
+
+# Watch mode
+npm run test:watch
+
+# Coverage
+npm test -- --coverage
+
+# Specific test
+npm test -- crypto.service.test.ts
+```
+
+## 🐳 Docker Commands
+
+```bash
+# Start Redis
+docker-compose up -d
+
+# Stop Redis
+docker-compose down
+
+# View logs
+docker logs ciphershare-redis
+
+# Restart Redis
+docker-compose restart redis
+
+# Clean up
+docker-compose down -v
+```
+
+## 🔧 Common Tasks
+
+### Generate New System Key
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+### Clear Redis Data
+
+```bash
+docker exec -it ciphershare-redis redis-cli FLUSHALL
+```
+
+### Check Redis Keys
+
+```bash
+docker exec -it ciphershare-redis redis-cli KEYS "*"
+```
+
+### View Specific Key
+
+```bash
+docker exec -it ciphershare-redis redis-cli GET "request:your-id"
+```
+
+### Check Redis Memory
+
+```bash
+docker exec -it ciphershare-redis redis-cli INFO memory
+```
+
+## 🎨 Frontend Development
+
+### Component Structure
+
+```tsx
+import { useState } from "react";
+import { api } from "../api";
+
+export default function Component() {
+  const [state, setState] = useState();
+
+  const handleAction = async () => {
+    try {
+      const result = await api.method();
+      // Handle success
+    } catch (error) {
+      // Handle error
+    }
+  };
+
+  return <div className="card">...</div>;
+}
+```
+
+### Tailwind Classes
+
+```css
+.card              /* Gray card with border */
+/* Gray card with border */
+.btn-primary       /* Blue gradient button */
+.btn-secondary     /* Gray button */
+.input-field       /* Styled input/textarea */
+.label; /* Form label */
+```
+
+## 🔐 Encryption Flow
+
+### Encrypt (Server)
+
+```typescript
+// 1. User password → PBKDF2 → Key
+const salt = crypto.randomBytes(32);
+const key = crypto.pbkdf2Sync(password, salt, 100000, 32, "sha256");
+
+// 2. AES-256-GCM with user key
+const userEncrypted = encrypt(secret, key);
+
+// 3. AES-256-GCM with system key
+const finalEncrypted = encrypt(userEncrypted, systemKey);
+
+// 4. Store in Redis with TTL
+await redis.set(id, finalEncrypted, "EX", ttl);
+```
+
+### Decrypt (Server)
+
+```typescript
+// 1. Get from Redis
+const encrypted = await redis.get(id);
+
+// 2. Decrypt with system key
+const userEncrypted = decrypt(encrypted, systemKey);
+
+// 3. Verify password
+if (!verifyPassword(password, storedHash)) throw Error();
+
+// 4. Decrypt with user password
+const secret = decrypt(userEncrypted, derivedKey);
+```
+
+## 📊 Redis Data Structure
+
+```
+request:{uuid}
+{
+  requestId: string,
+  requestorEmail: string,
+  description: string,
+  retentionType: 'view' | 'time',
+  retentionValue: number,
+  status: 'pending' | 'submitted',
+  createdAt: number
+}
+
+secret:{uuid}
+{
+  retrievalId: string,
+  requestId: string,
+  encryptedSecret: string,
+  passwordHash: string,
+  viewsRemaining?: number,
+  expiresAt: number
+}
+```
+
+## 🐛 Debugging
+
+### Check Backend Logs
+
+```bash
+# In dev mode, check terminal running npm run dev
+# Look for server output (usually after [server] prefix)
+```
+
+### Check Frontend Logs
+
+```bash
+# Open browser DevTools (F12)
+# Check Console tab for errors
+# Check Network tab for API calls
+```
+
+### Test Encryption Locally
+
+```typescript
+import { CryptoService } from "./server/crypto.service";
+
+const crypto = new CryptoService("your-64-char-key");
+const { encrypted, passwordHash } = crypto.dualEncrypt("test", "password");
+const decrypted = crypto.dualDecrypt(encrypted, "password");
+console.log(decrypted === "test"); // Should be true
+```
+
+## 📚 Documentation Links
+
+- [README.md](README.md) - Full documentation
+- [QUICKSTART.md](QUICKSTART.md) - Quick setup
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Technical details
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Deploy guide
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribute
+
+## 🆘 Troubleshooting
+
+### Redis won't start
+
+```bash
+docker-compose down
+docker system prune -f
+docker-compose up -d
+```
+
+### Port in use
+
+```bash
+lsof -ti:5173 | xargs kill -9  # Frontend
+lsof -ti:3001 | xargs kill -9  # Backend
+```
+
+### Dependencies issue
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### TypeScript errors
+
+```bash
+# Check tsconfig.json
+# Ensure @types packages installed
+npm install --save-dev @types/node @types/react @types/react-dom
+```
+
+## 💡 Tips
+
+1. **Use .env for local config** - Never commit secrets
+2. **Check logs first** - Most issues show in console
+3. **Test incrementally** - Test each flow separately
+4. **Clear Redis when testing** - Avoid stale data
+5. **Use TypeScript strictly** - Catch errors early
+6. **Write tests** - For all new features
+7. **Document changes** - Update relevant docs
+
+## 📞 Need Help?
+
+- Check error messages in console
+- Search existing GitHub issues
+- Read the documentation
+- Create a new issue with details
+
+---
+
+**Quick Tip**: Press `Ctrl+K` then `Ctrl+S` in VSCode to see all keyboard shortcuts!
