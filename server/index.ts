@@ -296,7 +296,6 @@ process.on("SIGINT", async () => {
 app.listen(PORT, () => {
   console.log(`🔐 CipherShare API server running on port ${PORT}`);
   console.log(`📡 Client URL: ${CLIENT_URL}`);
-  console.log(` redis pass ${}`)
 });
 
 export default app;
