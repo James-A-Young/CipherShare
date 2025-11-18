@@ -1,6 +1,6 @@
 import { createClient, RedisClientType } from "redis";
-import { CryptoService } from "./crypto.service";
-import { SecretRequest, SubmittedSecret } from "./types";
+import { CryptoService } from "./crypto.service.js";
+import { SecretRequest, SubmittedSecret } from "./types.js";
 
 const MAX_EXPIRY_DAYS = 10;
 const SECONDS_PER_DAY = 86400;

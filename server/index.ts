@@ -1,25 +1,31 @@
 import express, { Request, Response } from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import cors from "cors";
 import dotenv from "dotenv";
 import crypto from "node:crypto";
-import { CryptoService } from "./crypto.service";
-import { RedisService } from "./redis.service";
-import { EmailService } from "./email.service";
+import { CryptoService } from "./crypto.service.js";
+import { RedisService } from "./redis.service.js";
+import { EmailService } from "./email.service.js";
 import {
   generalLimiter,
   requestCreationLimiter,
   secretSubmissionLimiter,
   secretRetrievalLimiter,
-} from "./rate-limiters";
+} from "./rate-limiters.js";
 import {
   SecretRequest,
   RequestCreationResponse,
   SecretSubmissionRequest,
   SecretRetrievalRequest,
   SecretRetrievalResponse,
-} from "./types";
+} from "./types.js";
 
 dotenv.config();
+
+// ESM __dirname polyfill
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,7 +35,14 @@ const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 app.use(cors());
 app.use(express.json());
 app.use("/api", generalLimiter); // Apply general rate limiting to all API routes
+// Static assets
+app.use(express.static(path.join(__dirname, "..", "dist")));
 
+// SPA client-side routing fallback: serve index.html for non-API routes
+app.get(/^\/(?!api\/).*/, (req: Request, res: Response, next: Function) => {
+  if (/\.[a-zA-Z0-9]+$/.test(req.path)) return next(); // skip real asset files
+  res.sendFile(path.join(__dirname, "..", "dist", "index.html"));
+});
 // Services
 const cryptoService = new CryptoService(
   process.env.SYSTEM_SECRET_KEY ||

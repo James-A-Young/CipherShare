@@ -1,7 +1,10 @@
 node_modules
 dist
 .env
+.env.prod
 .DS_Store
 *.log
 coverage
 .vscode
+dist
+server-dist

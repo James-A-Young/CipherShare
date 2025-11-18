@@ -7,12 +7,19 @@
         "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
         "dev:client": "vite",
         "dev:server": "tsx watch server/index.ts",
-        "build": "tsc && vite build",
+        "build": "npm run build:client && npm run build:server",
+        "build:client": "vite build",
+        "build:server": "tsc -p tsconfig.server.json",
+        "start": "node server-dist/index.js",
         "preview": "vite preview",
         "test": "npm-run-all --parallel test:unit test:frontend",
         "test:watch": "npm run test:frontend -- --watch",
         "test:unit": "jest",
-        "test:frontend": "vitest"
+        "test:frontend": "vitest",
+        "docker:build": "docker build -t ciphershare:latest .",
+        "docker:run": "docker-compose -f docker-compose.prod.yml up -d",
+        "docker:stop": "docker-compose -f docker-compose.prod.yml down",
+        "docker:logs": "docker-compose -f docker-compose.prod.yml logs -f app"
     },
     "engines": {
         "node": ">=24.0.0",

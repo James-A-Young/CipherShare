@@ -507,7 +507,7 @@ npm install
 rm -rf node_modules/.vite
 ```
 
-## � Additional Documentation
+## 📚 Additional Documentation
 
 For more detailed information, see:
 
@@ -515,6 +515,7 @@ For more detailed information, see:
 - **[Architecture](ARCHITECTURE.md)** - System design and technical architecture
 - **[Email Providers](docs/EMAIL_PROVIDERS.md)** - Email configuration (SendGrid/Mailgun)
 - **[Rate Limiting](docs/RATE_LIMITING.md)** - Comprehensive rate limiting guide
+- **[Docker Deployment](docs/DOCKER_DEPLOYMENT.md)** - 🐳 Production Docker setup
 - **[API Reference](QUICK_REFERENCE.md)** - API endpoints and configuration
 - **[Contributing](CONTRIBUTING.md)** - Development guidelines
 - **[Deployment](DEPLOYMENT.md)** - Production deployment guide
