@@ -168,15 +168,16 @@ export default function SecretSubmission() {
             </p>
             <p className="text-sm text-green-200">
               <strong>Important:</strong> Please share your password with the
-              requestor through a secure side channel (like a phone call, Signal
-              message, or in person). They will need it to decrypt the secret.
+              requestor through a secure side channel (like a jira ticket, phone
+              call, teams or slack message, or in person). They will need it to decrypt
+              the secret.
             </p>
           </div>
 
           {retrievalUrl && (
             <div className="bg-gray-900 rounded-lg p-4 mb-4">
               <p className="text-xs text-gray-500 mb-2">
-                Retrieval URL (also sent via email):
+                Retrieval URL (DO NOT SHARE THIS it is also sent via email):
               </p>
               <p className="text-xs text-blue-400 font-mono break-all">
                 {retrievalUrl}
