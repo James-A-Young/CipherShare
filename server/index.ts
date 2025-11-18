@@ -35,7 +35,7 @@ const emailService = new EmailService(
 );
 
 // Health check
-app.get("/api/health", (req: Request, res: Response) => {
+app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: Date.now() });
 });
 
