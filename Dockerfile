@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # Copy source code (frontend)
 COPY src ./src
@@ -34,7 +34,7 @@ COPY package.json ./
 COPY package-lock.json ./
 
 # Install dependencies (including dev for TypeScript compilation)
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # Copy server source
 COPY server ./server
@@ -57,7 +57,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --omit=dev && \
+RUN npm ci --ignore-scripts --omit=dev && \
     npm cache clean --force
 
 # Copy built frontend from builder
