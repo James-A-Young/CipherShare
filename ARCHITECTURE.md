@@ -21,17 +21,23 @@ CipherShare is a full-stack web application designed for secure secret sharing w
 ┌──────────────────────────────────────────────────────────────┐
 │                   Express API Server                         │
 │  ┌────────────────────────────────────────────────────┐      │
-│  │  Routes:                                           │      │
-│  │  - POST /api/requests                             │      │
+│  │  Middleware:                                       │      │
+│  │  - Rate Limiting (100 req/15min general)          │      │
+│  │  - CORS                                            │      │
+│  │  - JSON Body Parser                               │      │
+│  └────────────────────────────────────────────────────┘      │
+│  ┌────────────────────────────────────────────────────┐      │
+│  │  Routes (with specific rate limits):               │      │
+│  │  - POST /api/requests (10/15min)                  │      │
 │  │  - GET  /api/requests/:id                         │      │
-│  │  - POST /api/requests/:id/submit                  │      │
-│  │  - POST /api/secrets/:retrievalId                 │      │
+│  │  - POST /api/requests/:id/submit (5/15min)        │      │
+│  │  - POST /api/secrets/:retrievalId (10/15min)      │      │
 │  └────────────────────────────────────────────────────┘      │
 │  ┌────────────────────────────────────────────────────┐      │
 │  │  Services:                                         │      │
 │  │  - CryptoService (AES-256-GCM)                    │      │
 │  │  - RedisService (Data persistence)                │      │
-│  │  - EmailService (SendGrid)                        │      │
+│  │  - EmailService (SendGrid/Mailgun)               │      │
 │  └────────────────────────────────────────────────────┘      │
 └──────────────────────┬───────────────────────────────────────┘
                        │
@@ -183,7 +189,7 @@ secret:{retrievalId} → {
 
 #### 3. EmailService
 
-**Purpose**: Send notification emails via SendGrid.
+**Purpose**: Send notification emails via SendGrid or Mailgun.
 
 **Email Types**:
 
@@ -191,6 +197,26 @@ secret:{retrievalId} → {
    - Contains retrieval URL
    - Instructions for password
    - Security reminders
+
+#### 4. Rate Limiters
+
+**Purpose**: Protect API endpoints from abuse and attacks.
+
+**Module**: `server/rate-limiters.ts`
+
+**Exported Limiters**:
+
+- `generalLimiter` - 100 req/15min for all API routes
+- `requestCreationLimiter` - 10 req/15min for creating requests
+- `secretSubmissionLimiter` - 5 req/15min for submitting secrets
+- `secretRetrievalLimiter` - 10 req/15min for retrieving secrets
+
+**Configuration**: Each limiter uses `express-rate-limit` with:
+
+- `windowMs`: 15-minute sliding window
+- `max`: Request limit per IP
+- `standardHeaders`: true (RFC draft headers)
+- `legacyHeaders`: false
 
 **Template Features**:
 
@@ -200,6 +226,78 @@ secret:{retrievalId} → {
 - Security warnings
 
 ## Security Architecture
+
+### Rate Limiting
+
+CipherShare implements multi-tier rate limiting to protect against various attack vectors:
+
+#### General API Protection
+
+- **Limit**: 100 requests per 15 minutes per IP
+- **Applies to**: All `/api/*` endpoints
+- **Purpose**: Prevent general API abuse and resource exhaustion
+
+#### Request Creation Limiter
+
+- **Limit**: 10 requests per 15 minutes per IP
+- **Applies to**: `POST /api/requests`
+- **Purpose**: Prevent spam request creation
+
+#### Secret Submission Limiter
+
+- **Limit**: 5 submissions per 15 minutes per IP
+- **Applies to**: `POST /api/requests/:id/submit`
+- **Purpose**: Prevent secret spam and abuse
+
+#### Secret Retrieval Limiter
+
+- **Limit**: 10 attempts per 15 minutes per IP
+- **Applies to**: `POST /api/secrets/:retrievalId`
+- **Purpose**: Prevent password brute-force attacks
+
+#### Implementation Details
+
+Rate limiters are defined in `server/rate-limiters.ts` and imported into the main application:
+
+```typescript
+// server/rate-limiters.ts
+import rateLimit from "express-rate-limit";
+
+export const secretRetrievalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: "Too many retrieval attempts, please try again later.",
+  standardHeaders: true, // RateLimit-* headers
+  legacyHeaders: false,
+});
+
+// server/index.ts
+import { secretRetrievalLimiter } from "./rate-limiters";
+
+app.post("/api/secrets/:id", secretRetrievalLimiter, handler);
+```
+
+#### Response Headers
+
+When rate limiting is active, the following headers are included:
+
+- `RateLimit-Limit`: Maximum requests allowed
+- `RateLimit-Remaining`: Requests remaining in current window
+- `RateLimit-Reset`: Unix timestamp when the limit resets
+
+#### Error Response
+
+When limit is exceeded:
+
+```json
+{
+  "error": "Too many requests, please try again later."
+}
+```
+
+Status code: `429 Too Many Requests`
+
+**📚 For comprehensive rate limiting documentation**, including client handling, production considerations, and testing strategies, see [docs/RATE_LIMITING.md](docs/RATE_LIMITING.md)
 
 ### Encryption Layers
 

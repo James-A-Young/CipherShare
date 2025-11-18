@@ -65,6 +65,23 @@ docker-compose -f docker-compose.prod.yml up -d  # Deploy
 
 ## 🔐 API Endpoints
 
+### Rate Limits
+
+All endpoints are rate-limited to prevent abuse:
+
+| Endpoint        | Limit   | Window |
+| --------------- | ------- | ------ |
+| All `/api/*`    | 100 req | 15 min |
+| Create Request  | 10 req  | 15 min |
+| Submit Secret   | 5 req   | 15 min |
+| Retrieve Secret | 10 req  | 15 min |
+
+**Response Headers:**
+
+- `RateLimit-Limit` - Max requests allowed
+- `RateLimit-Remaining` - Requests remaining
+- `RateLimit-Reset` - Reset timestamp
+
 ### Create Request
 
 ```bash
@@ -257,13 +274,7 @@ export default function Component() {
 
 ```css
 .card              /* Gray card with border */
-/* Gray card with border */
-/* Gray card with border */
-/* Gray card with border */
-/* Gray card with border */
-/* Gray card with border */
-/* Gray card with border */
-/* Gray card with border */
+
 .btn-primary       /* Blue gradient button */
 .btn-secondary     /* Gray button */
 .input-field       /* Styled input/textarea */

@@ -6,6 +6,12 @@ import { CryptoService } from "./crypto.service";
 import { RedisService } from "./redis.service";
 import { EmailService } from "./email.service";
 import {
+  generalLimiter,
+  requestCreationLimiter,
+  secretSubmissionLimiter,
+  secretRetrievalLimiter,
+} from "./rate-limiters";
+import {
   SecretRequest,
   RequestCreationResponse,
   SecretSubmissionRequest,
@@ -22,6 +28,7 @@ const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use("/api", generalLimiter); // Apply general rate limiting to all API routes
 
 // Services
 const cryptoService = new CryptoService(
@@ -48,65 +55,74 @@ app.get("/api/health", (_req: Request, res: Response) => {
 });
 
 // Create a new secret request
-app.post("/api/requests", async (req: Request, res: Response) => {
-  try {
-    const {
-      requestorEmail,
-      description,
-      reference,
-      retentionType,
-      retentionValue,
-    } = req.body;
+app.post(
+  "/api/requests",
+  requestCreationLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const {
+        requestorEmail,
+        description,
+        reference,
+        retentionType,
+        retentionValue,
+      } = req.body;
 
-    // Validation
-    if (!requestorEmail || !description || !retentionType || !retentionValue) {
-      return res.status(400).json({ error: "Missing required fields" });
+      // Validation
+      if (
+        !requestorEmail ||
+        !description ||
+        !retentionType ||
+        !retentionValue
+      ) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      if (retentionType !== "view" && retentionType !== "time") {
+        return res.status(400).json({ error: "Invalid retention type" });
+      }
+
+      if (retentionType === "view" && ![1, 2].includes(retentionValue)) {
+        return res.status(400).json({ error: "View limit must be 1 or 2" });
+      }
+
+      if (retentionType === "time" && ![3, 5, 10].includes(retentionValue)) {
+        return res
+          .status(400)
+          .json({ error: "Time limit must be 3, 5, or 10 days" });
+      }
+
+      // Generate request ID and retrieval ID upfront
+      const requestId = crypto.randomUUID();
+      const retrievalId = crypto.randomUUID();
+
+      const secretRequest: SecretRequest = {
+        requestId,
+        requestorEmail,
+        description,
+        reference,
+        retentionType,
+        retentionValue,
+        retrievalId,
+        status: "pending",
+        createdAt: Date.now(),
+      };
+
+      await redisService.saveSecretRequest(secretRequest);
+
+      const response: RequestCreationResponse = {
+        requestId,
+        shareableUrl: `${CLIENT_URL}/request/${requestId}`,
+        retrievalUrl: `${CLIENT_URL}/retrieve/${retrievalId}`,
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error("Error creating request:", error);
+      res.status(500).json({ error: "Failed to create request" });
     }
-
-    if (retentionType !== "view" && retentionType !== "time") {
-      return res.status(400).json({ error: "Invalid retention type" });
-    }
-
-    if (retentionType === "view" && ![1, 2].includes(retentionValue)) {
-      return res.status(400).json({ error: "View limit must be 1 or 2" });
-    }
-
-    if (retentionType === "time" && ![3, 5, 10].includes(retentionValue)) {
-      return res
-        .status(400)
-        .json({ error: "Time limit must be 3, 5, or 10 days" });
-    }
-
-    // Generate request ID and retrieval ID upfront
-    const requestId = crypto.randomUUID();
-    const retrievalId = crypto.randomUUID();
-
-    const secretRequest: SecretRequest = {
-      requestId,
-      requestorEmail,
-      description,
-      reference,
-      retentionType,
-      retentionValue,
-      retrievalId,
-      status: "pending",
-      createdAt: Date.now(),
-    };
-
-    await redisService.saveSecretRequest(secretRequest);
-
-    const response: RequestCreationResponse = {
-      requestId,
-      shareableUrl: `${CLIENT_URL}/request/${requestId}`,
-      retrievalUrl: `${CLIENT_URL}/retrieve/${retrievalId}`,
-    };
-
-    res.json(response);
-  } catch (error) {
-    console.error("Error creating request:", error);
-    res.status(500).json({ error: "Failed to create request" });
   }
-});
+);
 
 // Get a secret request
 app.get("/api/requests/:requestId", async (req: Request, res: Response) => {
@@ -138,6 +154,7 @@ app.get("/api/requests/:requestId", async (req: Request, res: Response) => {
 // Submit a secret
 app.post(
   "/api/requests/:requestId/submit",
+  secretSubmissionLimiter,
   async (req: Request, res: Response) => {
     try {
       const { requestId } = req.params;
@@ -208,39 +225,43 @@ app.post(
 );
 
 // Retrieve a secret
-app.post("/api/secrets/:retrievalId", async (req: Request, res: Response) => {
-  try {
-    const { retrievalId } = req.params;
-    const { password }: SecretRetrievalRequest = req.body;
+app.post(
+  "/api/secrets/:retrievalId",
+  secretRetrievalLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const { retrievalId } = req.params;
+      const { password }: SecretRetrievalRequest = req.body;
 
-    if (!password) {
-      return res.status(400).json({ error: "Password is required" });
+      if (!password) {
+        return res.status(400).json({ error: "Password is required" });
+      }
+
+      const result = await redisService.retrieveSecret(retrievalId, password);
+
+      const response: SecretRetrievalResponse = {
+        secret: result.secret,
+        viewsRemaining: result.viewsRemaining,
+      };
+
+      res.json(response);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === "Secret not found or expired") {
+          return res.status(404).json({ error: "Secret not found or expired" });
+        }
+        if (error.message === "Invalid password") {
+          return res.status(401).json({ error: "Invalid password" });
+        }
+        if (error.message === "Secret has expired") {
+          return res.status(410).json({ error: "Secret has expired" });
+        }
+      }
+      console.error("Error retrieving secret:", error);
+      res.status(500).json({ error: "Failed to retrieve secret" });
     }
-
-    const result = await redisService.retrieveSecret(retrievalId, password);
-
-    const response: SecretRetrievalResponse = {
-      secret: result.secret,
-      viewsRemaining: result.viewsRemaining,
-    };
-
-    res.json(response);
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "Secret not found or expired") {
-        return res.status(404).json({ error: "Secret not found or expired" });
-      }
-      if (error.message === "Invalid password") {
-        return res.status(401).json({ error: "Invalid password" });
-      }
-      if (error.message === "Secret has expired") {
-        return res.status(410).json({ error: "Secret has expired" });
-      }
-    }
-    console.error("Error retrieving secret:", error);
-    res.status(500).json({ error: "Failed to retrieve secret" });
   }
-});
+);
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {

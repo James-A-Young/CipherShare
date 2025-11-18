@@ -75,6 +75,7 @@
 - **AES-256-GCM** - Symmetric encryption algorithm
 - **PBKDF2** - Password-based key derivation (100,000 iterations)
 - **crypto (Node.js)** - Native cryptographic functions
+- **Rate Limiting** - API protection against abuse and brute force attacks
 
 ### Testing
 
@@ -340,6 +341,21 @@ Retrieves and decrypts a secret using the password.
 
 ## 🔐 Security Architecture
 
+### Rate Limiting
+
+API rate limiting protects against abuse and brute force attacks:
+
+| Endpoint                                            | Limit        | Window | Purpose               |
+| --------------------------------------------------- | ------------ | ------ | --------------------- |
+| General API (`GET /api/*`)                          | 100 requests | 15 min | Prevent general abuse |
+| Request Creation (`POST /api/requests`)             | 10 requests  | 15 min | Prevent request spam  |
+| Secret Submission (`POST /api/requests/:id/submit`) | 5 requests   | 15 min | Prevent secret spam   |
+| Secret Retrieval (`POST /api/secrets/:id`)          | 10 requests  | 15 min | Prevent brute force   |
+
+Rate limit headers (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`) are included in all responses.
+
+**📚 For detailed information**, see [Rate Limiting Documentation](docs/RATE_LIMITING.md)
+
 ### Dual Encryption Process
 
 ```
@@ -491,7 +507,20 @@ npm install
 rm -rf node_modules/.vite
 ```
 
-## 📧 Support
+## � Additional Documentation
+
+For more detailed information, see:
+
+- **[Quick Start Guide](QUICKSTART.md)** - Get up and running quickly
+- **[Architecture](ARCHITECTURE.md)** - System design and technical architecture
+- **[Email Providers](docs/EMAIL_PROVIDERS.md)** - Email configuration (SendGrid/Mailgun)
+- **[Rate Limiting](docs/RATE_LIMITING.md)** - Comprehensive rate limiting guide
+- **[API Reference](QUICK_REFERENCE.md)** - API endpoints and configuration
+- **[Contributing](CONTRIBUTING.md)** - Development guidelines
+- **[Deployment](DEPLOYMENT.md)** - Production deployment guide
+- **[Project Summary](PROJECT_SUMMARY.md)** - High-level project overview
+
+## �📧 Support
 
 For issues, questions, or contributions, please open an issue on GitHub.
 
