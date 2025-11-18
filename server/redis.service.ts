@@ -19,7 +19,7 @@ export class RedisService {
       password: process.env.REDIS_PASSWORD || undefined,
     });
 
-    this.client.on("error", (err) => console.error(`Redis Client Error (${process.env.REDIS_HOST} | ${process.env.REDIS_PASSWORD.length})`, err));
+    this.client.on("error", (err) => console.error(`Redis Client Error (${process.env.REDIS_HOST} | ${(process.env.REDIS_PASSWORD ?? "").length})`, err));
     this.client.on("connect", () => console.log("Redis Client Connected"));
   }
 
