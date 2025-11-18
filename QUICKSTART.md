@@ -55,8 +55,17 @@ nano .env
 Key settings:
 
 - `SYSTEM_SECRET_KEY`: Your encryption key (change for production!)
-- `SENDGRID_API_KEY`: Get from https://sendgrid.com/ (needed for email)
-- `SENDGRID_FROM_EMAIL`: Your verified sender email
+- `EMAIL_PROVIDER`: Choose `sendgrid` or `mailgun` (default: sendgrid)
+- `EMAIL_FROM`: Your verified sender email
+
+**For SendGrid:**
+
+- `SENDGRID_API_KEY`: Get from https://sendgrid.com/
+
+**For Mailgun:**
+
+- `MAILGUN_API_KEY`: Get from https://mailgun.com/
+- `MAILGUN_DOMAIN`: Your Mailgun domain (e.g., mg.yourdomain.com)
 
 ### 4. Start Development Servers
 
@@ -160,7 +169,7 @@ npm run test:watch
 ## Next Steps
 
 - 📖 Read the full [README.md](README.md) for detailed documentation
-- 🔐 Configure SendGrid for email notifications
+- 🔐 Configure email provider (SendGrid or Mailgun) for notifications
 - 🚢 Check [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines
 - 🐳 See Docker deployment options
 

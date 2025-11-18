@@ -29,10 +29,18 @@ const cryptoService = new CryptoService(
     "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 );
 const redisService = new RedisService(cryptoService);
-const emailService = new EmailService(
-  process.env.SENDGRID_API_KEY || "",
-  process.env.SENDGRID_FROM_EMAIL || "noreply@ciphershare.app"
-);
+
+// Email service configuration
+const emailProvider = (process.env.EMAIL_PROVIDER || "sendgrid").toLowerCase();
+const emailService = new EmailService({
+  provider: emailProvider as "sendgrid" | "mailgun",
+  fromEmail: process.env.EMAIL_FROM || "noreply@ciphershare.app",
+  // SendGrid config
+  sendgridApiKey: process.env.SENDGRID_API_KEY,
+  // Mailgun config
+  mailgunApiKey: process.env.MAILGUN_API_KEY,
+  mailgunDomain: process.env.MAILGUN_DOMAIN,
+});
 
 // Health check
 app.get("/api/health", (_req: Request, res: Response) => {

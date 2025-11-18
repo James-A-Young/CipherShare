@@ -112,13 +112,39 @@ SYSTEM_SECRET_KEY=<64-char-hex>
 REDIS_HOST=localhost
 REDIS_PORT=6379
 
-# Optional (for email)
+# Email Configuration
+EMAIL_PROVIDER=sendgrid          # Options: "sendgrid" or "mailgun"
+EMAIL_FROM=noreply@domain.com
+
+# SendGrid (if EMAIL_PROVIDER=sendgrid)
 SENDGRID_API_KEY=<your-key>
-SENDGRID_FROM_EMAIL=noreply@domain.com
+
+# Mailgun (if EMAIL_PROVIDER=mailgun)
+MAILGUN_API_KEY=<your-key>
+MAILGUN_DOMAIN=mg.yourdomain.com
 
 # Server
 PORT=3001
 CLIENT_URL=http://localhost:5173
+```
+
+### Email Provider Setup
+
+**SendGrid:**
+
+```bash
+EMAIL_PROVIDER=sendgrid
+SENDGRID_API_KEY=SG.xxxxx
+EMAIL_FROM=noreply@yourdomain.com
+```
+
+**Mailgun:**
+
+```bash
+EMAIL_PROVIDER=mailgun
+MAILGUN_API_KEY=xxxxx
+MAILGUN_DOMAIN=mg.yourdomain.com
+EMAIL_FROM=noreply@yourdomain.com
 ```
 
 ## 🧪 Testing
@@ -231,6 +257,10 @@ export default function Component() {
 
 ```css
 .card              /* Gray card with border */
+/* Gray card with border */
+/* Gray card with border */
+/* Gray card with border */
+/* Gray card with border */
 /* Gray card with border */
 /* Gray card with border */
 /* Gray card with border */

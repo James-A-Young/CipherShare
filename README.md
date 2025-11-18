@@ -43,9 +43,11 @@
 
 ### 📧 Email Notifications
 
-- SendGrid integration for sending retrieval links
+- Multiple email provider support (SendGrid or Mailgun)
+- Configurable via environment variable
 - Secure HTML-formatted emails
 - Automatic notification on secret submission
+- Reference field included in notifications
 
 ## 🏗️ Tech Stack
 
@@ -85,7 +87,8 @@
 
 - **Node.js 24 LTS** (Iron) and npm 10+
 - **Docker** and Docker Compose
-- **SendGrid Account** (for email notifications)
+- **Email Service Account** - Choose one:
+  - **SendGrid or MailGun Account**
 
 > 💡 **Tip**: Use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions. This project includes a `.nvmrc` file:
 >
@@ -127,9 +130,16 @@ REDIS_PASSWORD=
 # System Encryption Key (MUST be 64 hex characters = 32 bytes)
 SYSTEM_SECRET_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
-# SendGrid Configuration
-SENDGRID_API_KEY=your_actual_sendgrid_api_key_here
-SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+# Email Configuration
+EMAIL_PROVIDER=sendgrid  # Options: "sendgrid" or "mailgun"
+EMAIL_FROM=noreply@yourdomain.com
+
+# SendGrid Configuration (if using EMAIL_PROVIDER=sendgrid)
+SENDGRID_API_KEY=your_sendgrid_api_key_here
+
+# Mailgun Configuration (if using EMAIL_PROVIDER=mailgun)
+MAILGUN_API_KEY=your_mailgun_api_key_here
+MAILGUN_DOMAIN=your-domain.com
 
 # Server Configuration
 PORT=3001
@@ -141,6 +151,33 @@ CLIENT_URL=http://localhost:5173
 > ```bash
 > node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 > ```
+
+#### Email Provider Configuration
+
+**Option 1: SendGrid (Default)**
+
+1. Sign up at [SendGrid](https://sendgrid.com/)
+2. Create an API key with "Mail Send" permissions
+3. Verify your sender email/domain
+4. Set in `.env`:
+   ```env
+   EMAIL_PROVIDER=sendgrid
+   SENDGRID_API_KEY=your_key_here
+   EMAIL_FROM=noreply@yourdomain.com
+   ```
+
+**Option 2: Mailgun**
+
+1. Sign up at [Mailgun](https://www.mailgun.com/)
+2. Get your API key from the dashboard
+3. Add and verify your domain
+4. Set in `.env`:
+   ```env
+   EMAIL_PROVIDER=mailgun
+   MAILGUN_API_KEY=your_key_here
+   MAILGUN_DOMAIN=mg.yourdomain.com
+   EMAIL_FROM=noreply@yourdomain.com
+   ```
 
 ### 4. Start Redis with Docker
 
@@ -365,8 +402,17 @@ Ensure you set these in your production environment:
 
 - `NODE_ENV=production`
 - `SYSTEM_SECRET_KEY` - Generate a new random 64-character hex string
+- `EMAIL_PROVIDER` - Either `sendgrid` or `mailgun`
+- `EMAIL_FROM` - Your verified sender email address
+
+**If using SendGrid:**
+
 - `SENDGRID_API_KEY` - Your SendGrid API key
-- `SENDGRID_FROM_EMAIL` - Verified sender email
+
+**If using Mailgun:**
+
+- `MAILGUN_API_KEY` - Your Mailgun API key
+- `MAILGUN_DOMAIN` - Your Mailgun domain (e.g., `mg.yourdomain.com`)
 - `CLIENT_URL` - Your production frontend URL
 - `REDIS_HOST` - Redis host (use service name in Docker)
 - `REDIS_PASSWORD` - Secure Redis password
@@ -389,7 +435,7 @@ ciphershare/
 │   ├── __tests__/           # Backend tests
 │   ├── crypto.service.ts    # Encryption/decryption logic
 │   ├── redis.service.ts     # Redis operations
-│   ├── email.service.ts     # SendGrid email service
+│   ├── email.service.ts     # Multi-provider email service (SendGrid/Mailgun)
 │   ├── types.ts             # TypeScript type definitions
 │   └── index.ts             # Express app and routes
 ├── docker-compose.yml        # Docker configuration
