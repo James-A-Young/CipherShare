@@ -42,20 +42,21 @@ export interface RetrieveSecretResponse {
 }
 
 const getApiBaseUrl = () => {
-  if (typeof process !== "undefined") {
-    if (process.env.VITE_API_URL) {
-      return process.env.VITE_API_URL;
+  // Ensure we are in a browser environment (though implied by the prompt)
+  if (typeof window !== "undefined" && window.location) {
+    const { hostname } = window.location;
+    
+    // 1. Specific Localhost Fallback (for development)
+    // If the browser is viewing http://localhost, use the specific backend port 3001
+    if (hostname === 'localhost') {
+      return "http://localhost:3001/api";
     }
-    if (process.env.CLIENT_URL) {
-      return process.env.CLIENT_URL + "/api";
-    }
-  }
-  const importMetaEnv = (globalThis as any).importMetaEnv;
-  if (importMetaEnv && importMetaEnv.VITE_API_URL) {
-    return importMetaEnv.VITE_API_URL;
-  }
 
-  return "http://localhost:3001/api";
+    // 2. Production/Other Host Fallback
+    // For all other hosts (e.g., staging.app.com, prod.app.com), 
+    // use the current host's root (including protocol/port) and append /api
+    return `${window.location.origin}/api`;
+  } 
 }
 
 const API_BASE_URL = getApiBaseUrl();
