@@ -458,7 +458,6 @@ Standard HTTP status codes:
 
    - Rate limiting per IP
    - CAPTCHA for bot prevention
-   - 2FA for retrieval
    - Audit logging
 
 3. **Features**
@@ -467,6 +466,53 @@ Standard HTTP status codes:
    - Secret sharing groups
    - Custom expiration times
 
+### Testing Architecture
+
+This project uses a **dual testing setup** optimized for different environments:
+
+#### Frontend Tests (Vitest)
+
+- **Framework**: Vitest 4.0 with jsdom environment
+- **Location**: `src/__tests__/**/*.test.{ts,tsx}`
+- **Purpose**: React component testing, UI logic, and client-side behavior
+- **Features**: Fast HMR, native ESM, Vite-powered builds
+- **Command**: `npm run test:frontend`
+
+#### Backend Tests (Jest)
+
+- **Framework**: Jest 29.7 with ts-jest
+- **Location**: `server/**/*.test.{ts,tsx}`
+- **Purpose**: Server logic, API endpoints, encryption services
+- **Features**: Mature ecosystem, extensive mocking capabilities
+- **Command**: `npm run test:unit`
+
+#### Why Dual Testing?
+
+- **Vitest**: Optimized for Vite-based frontend code, shares config with dev/build
+- **Jest**: Battle-tested for Node.js backend code with comprehensive tooling
+- **Parallel Execution**: Both suites run simultaneously via `npm test`
+
+### CSS Architecture (Tailwind v4)
+
+Tailwind CSS v4 introduces a **CSS-first configuration approach**:
+
+```css
+/* Old v3 syntax */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* New v4 syntax */
+@import "tailwindcss";
+```
+
+**Key Changes**:
+
+- PostCSS plugin: `@tailwindcss/postcss` instead of `tailwindcss`
+- Configuration via CSS custom properties instead of `tailwind.config.js`
+- Improved performance with native CSS cascade layers
+- Better tree-shaking and smaller bundle sizes
+
 ---
 
-**Last Updated**: November 2025
+**Last Updated**: November 18, 2025

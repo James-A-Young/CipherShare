@@ -4,15 +4,18 @@
 
 ```bash
 # Setup
-npm install                    # Install dependencies
+nvm use                       # Switch to Node 24 LTS (reads .nvmrc)
+npm install                   # Install dependencies
 docker-compose up -d          # Start Redis
 npm run dev                   # Start dev servers
-npm test                      # Run tests
+npm test                      # Run all tests (Vitest + Jest)
 
 # Development
 npm run dev:client            # Frontend only (Vite)
 npm run dev:server            # Backend only (Express)
-npm run test:watch            # Tests in watch mode
+npm run test:frontend         # Frontend tests (Vitest)
+npm run test:unit             # Backend tests (Jest)
+npm run test:watch            # Frontend tests in watch mode
 
 # Production
 npm run build                 # Build for production
@@ -51,9 +54,13 @@ docker-compose -f docker-compose.prod.yml up -d  # Deploy
 ### Config
 
 - `.env` - Environment variables
+- `.nvmrc` - Node.js version (24 LTS)
 - `vite.config.ts` - Vite configuration
+- `vitest.config.js` - Vitest test config (frontend)
+- `jest.config.js` - Jest test config (backend)
 - `tsconfig.json` - TypeScript settings
-- `tailwind.config.js` - Tailwind CSS
+- `tailwind.config.js` - Tailwind CSS v4 config
+- `postcss.config.js` - PostCSS with @tailwindcss/postcss
 - `docker-compose.yml` - Docker services
 
 ## 🔐 API Endpoints
@@ -116,19 +123,34 @@ CLIENT_URL=http://localhost:5173
 
 ## 🧪 Testing
 
+### Dual Testing Setup
+
+This project uses **Vitest** for frontend and **Jest** for backend:
+
 ```bash
-# Run all tests
+# Run all tests (both Vitest and Jest in parallel)
 npm test
 
-# Watch mode
+# Frontend tests only (Vitest)
+npm run test:frontend
+
+# Backend tests only (Jest)
+npm run test:unit
+
+# Watch mode (Vitest)
 npm run test:watch
 
-# Coverage
-npm test -- --coverage
+# Specific frontend test
+npm run test:frontend -- RequestGeneration.test.tsx
 
-# Specific test
-npm test -- crypto.service.test.ts
+# Specific backend test
+npm run test:unit -- crypto.service.test.ts
 ```
+
+### Why Dual Testing?
+
+- **Vitest**: Optimized for Vite-based frontend code with HMR
+- **Jest**: Battle-tested for Node.js backend with comprehensive tooling
 
 ## 🐳 Docker Commands
 
@@ -209,6 +231,8 @@ export default function Component() {
 
 ```css
 .card              /* Gray card with border */
+/* Gray card with border */
+/* Gray card with border */
 /* Gray card with border */
 .btn-primary       /* Blue gradient button */
 .btn-secondary     /* Gray button */
@@ -347,12 +371,14 @@ npm install --save-dev @types/node @types/react @types/react-dom
 ## 💡 Tips
 
 1. **Use .env for local config** - Never commit secrets
-2. **Check logs first** - Most issues show in console
-3. **Test incrementally** - Test each flow separately
-4. **Clear Redis when testing** - Avoid stale data
-5. **Use TypeScript strictly** - Catch errors early
-6. **Write tests** - For all new features
-7. **Document changes** - Update relevant docs
+2. **Use nvm for Node version** - Run `nvm use` to ensure Node 24 LTS
+3. **Check logs first** - Most issues show in console
+4. **Test incrementally** - Test each flow separately
+5. **Clear Redis when testing** - Avoid stale data
+6. **Use TypeScript strictly** - Catch errors early
+7. **Run both test suites** - Vitest for frontend, Jest for backend
+8. **Write tests** - For all new features
+9. **Document changes** - Update relevant docs
 
 ## 📞 Need Help?
 
@@ -360,7 +386,3 @@ npm install --save-dev @types/node @types/react @types/react-dom
 - Search existing GitHub issues
 - Read the documentation
 - Create a new issue with details
-
----
-
-**Quick Tip**: Press `Ctrl+K` then `Ctrl+S` in VSCode to see all keyboard shortcuts!

@@ -4,6 +4,16 @@ Use this checklist when deploying CipherShare to production.
 
 ## Pre-Deployment
 
+### Node.js Version
+
+- [ ] **Ensure Node.js 24 LTS is installed**
+
+  ```bash
+  node --version  # Should be 24.x.x
+  ```
+
+  If using nvm: `nvm install 24 && nvm use 24`
+
 ### Security Configuration
 
 - [ ] **Generate New System Secret Key**
@@ -54,8 +64,13 @@ Verify all required environment variables are set:
 - [ ] **Run all tests**
 
   ```bash
-  npm test
+  npm test  # Runs both Vitest (frontend) and Jest (backend) in parallel
   ```
+
+  Verify both test suites pass:
+
+  - Frontend tests (Vitest)
+  - Backend tests (Jest)
 
 - [ ] **Build successfully**
 

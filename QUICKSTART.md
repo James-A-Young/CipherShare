@@ -6,9 +6,15 @@ This guide will help you get CipherShare up and running in under 5 minutes.
 
 Before starting, ensure you have:
 
-- ✅ Node.js 18+ installed (`node --version`)
+- ✅ Node.js 24 LTS (Iron) installed (`node --version`)
+- ✅ npm 10+ installed (`npm --version`)
 - ✅ Docker Desktop running (`docker --version`)
-- ✅ npm installed (`npm --version`)
+
+> 💡 **Using nvm?** This project includes a `.nvmrc` file. Just run:
+>
+> ```bash
+> nvm use
+> ```
 
 ## Step-by-Step Setup
 
@@ -135,11 +141,19 @@ npm install
 
 ## Running Tests
 
+This project uses a dual testing setup:
+
 ```bash
-# Run all tests
+# Run all tests (Vitest + Jest in parallel)
 npm test
 
-# Watch mode
+# Frontend tests only (Vitest)
+npm run test:frontend
+
+# Backend tests only (Jest)
+npm run test:unit
+
+# Watch mode (Vitest)
 npm run test:watch
 ```
 

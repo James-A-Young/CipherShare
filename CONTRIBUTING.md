@@ -80,15 +80,26 @@ chore: update dependencies
 
 ### Running Tests
 
+This project uses a dual testing setup:
+
 ```bash
-# Run all tests
+# Run all tests (Vitest + Jest in parallel)
 npm test
 
-# Run specific test file
-npm test -- crypto.service.test.ts
+# Run frontend tests only (Vitest)
+npm run test:frontend
 
-# Run with coverage
-npm test -- --coverage
+# Run backend tests only (Jest)
+npm run test:unit
+
+# Run in watch mode (Vitest)
+npm run test:watch
+
+# Run specific test file (Vitest)
+npm run test:frontend -- RequestGeneration.test.tsx
+
+# Run specific test file (Jest)
+npm run test:unit -- crypto.service.test.ts
 ```
 
 ## Pull Request Process

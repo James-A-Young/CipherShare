@@ -3,8 +3,9 @@
 **CipherShare** is a secure secret sharing application that allows users to request, submit, and retrieve sensitive information with dual-layer encryption. Built with React, TypeScript, Tailwind CSS, Express, and Redis.
 
 ![CipherShare Banner](https://img.shields.io/badge/Security-Dual%20Encryption-blue?style=for-the-badge)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=for-the-badge&logo=typescript)
-![React](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react)
+![Node.js](https://img.shields.io/badge/Node.js-24%20LTS-339933?style=for-the-badge&logo=node.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=for-the-badge&logo=typescript)
+![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react)
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis)
 
 ## ✨ Features
@@ -50,17 +51,17 @@
 
 ### Frontend
 
-- **React 18.2** - Modern UI with functional components and hooks
-- **TypeScript 5.3** - Type-safe development
-- **Vite 5.0** - Fast build tool and dev server
-- **Tailwind CSS 3.3** - Utility-first CSS framework
-- **React Router 6.20** - Client-side routing
+- **React 18.3** - Modern UI with functional components and hooks
+- **TypeScript 5.7** - Type-safe development
+- **Vite 6.0** - Fast build tool and dev server
+- **Tailwind CSS 4.1** - Utility-first CSS framework with new v4 architecture
+- **React Router 7.1** - Client-side routing
 
 ### Backend
 
-- **Express 4.18** - RESTful API server
-- **Node.js** - JavaScript runtime
-- **TypeScript** - Type-safe backend
+- **Express 4.21** - RESTful API server
+- **Node.js 24 LTS** - JavaScript runtime (latest LTS release)
+- **TypeScript 5.7** - Type-safe backend
 
 ### Database & Caching
 
@@ -75,15 +76,22 @@
 
 ### Testing
 
-- **Jest 29.7** - JavaScript testing framework
+- **Vitest 4.0** - Fast frontend testing framework
+- **Jest 29.7** - Backend/server testing framework
 - **Testing Library** - React component testing
 - **ts-jest** - TypeScript support for Jest
 
 ## 📋 Prerequisites
 
-- **Node.js** 18+ and npm
+- **Node.js 24 LTS** (Iron) and npm 10+
 - **Docker** and Docker Compose
 - **SendGrid Account** (for email notifications)
+
+> 💡 **Tip**: Use [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions. This project includes a `.nvmrc` file:
+>
+> ```bash
+> nvm use
+> ```
 
 ## 🚀 Quick Start
 
@@ -159,17 +167,36 @@ This starts both the frontend (Vite) and backend (Express) servers concurrently:
 
 ## 🧪 Testing
 
-Run the test suite:
+This project uses a dual testing setup optimized for different parts of the codebase:
+
+- **Vitest** for frontend/React component tests
+- **Jest** for backend/server tests
+
+### Run All Tests
 
 ```bash
 npm test
 ```
 
-Run tests in watch mode:
+This runs both test suites in parallel.
+
+### Run Specific Test Suites
+
+```bash
+# Frontend tests only (Vitest)
+npm run test:frontend
+
+# Backend tests only (Jest)
+npm run test:unit
+```
+
+### Watch Mode
 
 ```bash
 npm run test:watch
 ```
+
+Runs Vitest in watch mode for rapid frontend development.
 
 ## 📚 API Documentation
 
