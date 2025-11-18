@@ -14,11 +14,11 @@ export class EmailService {
     reference: string | undefined,
     retrievalUrl: string
   ): Promise<void> {
-    const referenceText = reference ? ` (Reference: ${reference})` : '';
-    const referenceHtml = reference 
+    const referenceText = reference ? ` (Reference: ${reference})` : "";
+    const referenceHtml = reference
       ? `<p style="color: #9ca3af; font-size: 14px; margin-bottom: 10px;">Reference: <strong style="color: #f3f4f6;">${reference}</strong></p>`
-      : '';
-    
+      : "";
+
     const msg = {
       to: recipientEmail,
       from: this.fromEmail,

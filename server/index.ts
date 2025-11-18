@@ -42,8 +42,13 @@ app.get("/api/health", (_req: Request, res: Response) => {
 // Create a new secret request
 app.post("/api/requests", async (req: Request, res: Response) => {
   try {
-    const { requestorEmail, description, reference, retentionType, retentionValue } =
-      req.body;
+    const {
+      requestorEmail,
+      description,
+      reference,
+      retentionType,
+      retentionValue,
+    } = req.body;
 
     // Validation
     if (!requestorEmail || !description || !retentionType || !retentionValue) {

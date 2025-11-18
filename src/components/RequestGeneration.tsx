@@ -143,10 +143,19 @@ export default function RequestGeneration() {
               💡 <strong>Next Steps:</strong>
             </p>
             <ol className="text-sm text-blue-300 mt-2 ml-4 space-y-1">
-              <li>1. Share the Request URL with the person who will submit the secret</li>
+              <li>
+                1. Share the Request URL with the person who will submit the
+                secret
+              </li>
               <li>2. Save the Retrieval URL for yourself</li>
-              <li>3. Once they submit the secret, you'll also receive a notification email</li>
-              <li>4. They will share the password with you separately (e.g., via phone)</li>
+              <li>
+                3. Once they submit the secret, you'll also receive a
+                notification email
+              </li>
+              <li>
+                4. They will share the password with you separately (e.g., via
+                phone)
+              </li>
               <li>5. Use the Retrieval URL and password to view the secret</li>
             </ol>
           </div>
