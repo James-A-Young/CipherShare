@@ -1,5 +1,13 @@
 # 🐳 Docker Production Deployment
 
+## Multi-Platform Support
+
+CipherShare Docker images are built for multiple architectures and work seamlessly on:
+- **AMD64** (x86_64) - Traditional Intel/AMD processors
+- **ARM64/v8** - ARM-based processors (Apple Silicon, AWS Graviton, Raspberry Pi 4+, etc.)
+
+Docker automatically pulls the correct image for your platform. No special configuration needed!
+
 ## Quick Start
 
 ```bash
@@ -28,6 +36,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ## Container Features
 
 ✅ **Multi-stage build** - Optimized image size (~200MB)  
+✅ **Multi-platform support** - Works on AMD64 and ARM64/v8 architectures  
 ✅ **Non-root user** - Enhanced security  
 ✅ **Health checks** - Automatic monitoring  
 ✅ **Log rotation** - Prevents disk overflow  
