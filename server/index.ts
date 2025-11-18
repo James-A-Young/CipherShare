@@ -30,10 +30,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
-if(process?.env?.PROXY_LAYERS){
-  app.set('trust proxy', process.env.PROXY_LAYERS /* number of proxies between user and server */)
-}
 
+if (process.env.PROXY_LAYERS) {
+    app.set('trust proxy', parseInt(process.env.PROXY_LAYERS));
+}
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -67,7 +67,7 @@ const emailService = new EmailService({
 
 // Health check
 app.get("/api/health", (req: Request, res: Response) => {
-  res.json({ status: "ok", timestamp: Date.now(), source: req.ip });
+  res.json({ status: "ok", timestamp: Date.now(), source: req.ip, headers: req.headers });
 });
 
 // Create a new secret request
