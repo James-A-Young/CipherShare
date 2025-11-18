@@ -13,7 +13,7 @@ fi
 echo "✓ Docker is running"
 
 # Check if .env file exists
-if [ ! -f .env ]; then
+if [[ ! -f .env ]]; then
     echo "⚠️  .env file not found. Creating from .env.example..."
     cp .env.example .env
     echo "✓ .env file created"
@@ -23,7 +23,7 @@ else
 fi
 
 # Check if node_modules exists
-if [ ! -d node_modules ]; then
+if [[ ! -d node_modules ]]; then
     echo "📦 Installing dependencies..."
     npm install
 else

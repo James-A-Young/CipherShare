@@ -77,21 +77,23 @@ export default function RequestGeneration() {
           </div>
 
           <div className="bg-gray-900 rounded-lg p-6 mb-6">
-            <label className="label mb-3">Shareable Request URL:</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={shareableUrl}
-                readOnly
-                className="input-field flex-1 font-mono text-sm"
-              />
-              <button
-                onClick={handleCopy}
-                className="btn-primary whitespace-nowrap"
-              >
-                {copied ? "✓ Copied!" : "📋 Copy"}
-              </button>
-            </div>
+            <label className="label mb-3">
+              Shareable Request URL:
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={shareableUrl}
+                  readOnly
+                  className="input-field flex-1 font-mono text-sm"
+                />
+                <button
+                  onClick={handleCopy}
+                  className="btn-primary whitespace-nowrap"
+                >
+                  {copied ? "✓ Copied!" : "📋 Copy"}
+                </button>
+              </div>
+            </label>
           </div>
 
           <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4 mb-6">
@@ -165,7 +167,7 @@ export default function RequestGeneration() {
 
           {/* Retention Policy */}
           <div>
-            <label className="label mb-4">Retention Policy</label>
+            <span className="label mb-4">Retention Policy</span>
 
             {/* Retention Type */}
             <div className="space-y-4">

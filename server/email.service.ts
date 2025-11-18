@@ -1,7 +1,7 @@
 import sgMail from "@sendgrid/mail";
 
 export class EmailService {
-  private fromEmail: string;
+  private readonly fromEmail: string;
 
   constructor(apiKey: string, fromEmail: string) {
     sgMail.setApiKey(apiKey);

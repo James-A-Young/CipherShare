@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { CryptoService } from "./crypto.service";
 import { RedisService } from "./redis.service";
 import { EmailService } from "./email.service";

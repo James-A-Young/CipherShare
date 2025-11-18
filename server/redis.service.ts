@@ -6,8 +6,8 @@ const MAX_EXPIRY_DAYS = 10;
 const SECONDS_PER_DAY = 86400;
 
 export class RedisService {
-  private client: RedisClientType;
-  private cryptoService: CryptoService;
+  private readonly client: RedisClientType;
+  private readonly cryptoService: CryptoService;
   private isConnected: boolean = false;
 
   constructor(cryptoService: CryptoService) {

@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
@@ -7,7 +7,7 @@ const KEY_LENGTH = 32;
 const ITERATIONS = 100000;
 
 export class CryptoService {
-  private systemKey: Buffer;
+  private readonly systemKey: Buffer;
 
   constructor(systemSecretKey: string) {
     // Convert hex string to buffer
