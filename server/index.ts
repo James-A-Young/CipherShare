@@ -67,7 +67,7 @@ const emailService = new EmailService({
 
 // Health check
 app.get("/api/health", (req: Request, res: Response) => {
-  res.json({ status: "ok", timestamp: Date.now(), source: req.ip, headers: req.headers });
+  res.json({ status: "ok", timestamp: Date.now(), source: req.ip});
 });
 
 // Create a new secret request
@@ -296,6 +296,7 @@ process.on("SIGINT", async () => {
 app.listen(PORT, () => {
   console.log(`🔐 CipherShare API server running on port ${PORT}`);
   console.log(`📡 Client URL: ${CLIENT_URL}`);
+  console.log(` redis pass ${}`)
 });
 
 export default app;
