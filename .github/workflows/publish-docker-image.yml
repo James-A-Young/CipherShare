@@ -34,6 +34,6 @@ jobs:
           context: .
           push: true
           tags: |
-            ciphershare:${{ steps.get_version.outputs.version }}
-            ciphershare:${{ github.sha }}
-            ciphershare:latest
+            iammind/ciphershare:${{ steps.get_version.outputs.version }}
+            iammind/ciphershare:${{ github.sha }}
+            iammind/ciphershare:latest
