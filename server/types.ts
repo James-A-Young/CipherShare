@@ -2,8 +2,10 @@ export interface SecretRequest {
   requestId: string;
   requestorEmail: string;
   description: string;
+  reference?: string; // Optional reference to help identify the request
   retentionType: "view" | "time";
   retentionValue: number; // 1-2 for views, 3-10 for days
+  retrievalId: string; // Generated upfront so requestor has it immediately
   status: "pending" | "submitted";
   createdAt: number;
   submittedAt?: number;
@@ -22,6 +24,7 @@ export interface SubmittedSecret {
 export interface RequestCreationResponse {
   requestId: string;
   shareableUrl: string;
+  retrievalUrl: string; // Retrieval URL generated upfront
 }
 
 export interface SecretSubmissionRequest {

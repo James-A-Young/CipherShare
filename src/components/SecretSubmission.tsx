@@ -260,7 +260,7 @@ export default function SecretSubmission() {
               type="password"
               required
               className="input-field"
-              placeholder="Create a strong password"
+              placeholder="Create a strong password to protect your secret"
               value={formData.password}
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })

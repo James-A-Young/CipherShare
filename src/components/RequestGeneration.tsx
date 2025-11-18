@@ -5,13 +5,16 @@ export default function RequestGeneration() {
   const [formData, setFormData] = useState<CreateRequestPayload>({
     requestorEmail: "",
     description: "",
+    reference: "",
     retentionType: "time",
     retentionValue: 3,
   });
   const [shareableUrl, setShareableUrl] = useState<string>("");
+  const [retrievalUrl, setRetrievalUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
-  const [copied, setCopied] = useState(false);
+  const [copiedShareable, setCopiedShareable] = useState(false);
+  const [copiedRetrieval, setCopiedRetrieval] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +24,7 @@ export default function RequestGeneration() {
     try {
       const response = await api.createRequest(formData);
       setShareableUrl(response.shareableUrl);
+      setRetrievalUrl(response.retrievalUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create request");
     } finally {
@@ -28,11 +32,21 @@ export default function RequestGeneration() {
     }
   };
 
-  const handleCopy = async () => {
+  const handleCopyShareable = async () => {
     try {
       await navigator.clipboard.writeText(shareableUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedShareable(true);
+      setTimeout(() => setCopiedShareable(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const handleCopyRetrieval = async () => {
+    try {
+      await navigator.clipboard.writeText(retrievalUrl);
+      setCopiedRetrieval(true);
+      setTimeout(() => setCopiedRetrieval(false), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
@@ -40,9 +54,11 @@ export default function RequestGeneration() {
 
   const handleReset = () => {
     setShareableUrl("");
+    setRetrievalUrl("");
     setFormData({
       requestorEmail: "",
       description: "",
+      reference: "",
       retentionType: "time",
       retentionValue: 3,
     });
@@ -72,14 +88,17 @@ export default function RequestGeneration() {
               Request Created!
             </h2>
             <p className="text-gray-400">
-              Share this link to collect your secret
+              Share the request link and save your retrieval link
             </p>
           </div>
 
-          <div className="bg-gray-900 rounded-lg p-6 mb-6">
+          <div className="bg-gray-900 rounded-lg p-6 mb-4">
             <label className="label mb-3">
               Shareable Request URL:
-              <div className="flex gap-2">
+              <span className="text-xs text-gray-500 ml-2 font-normal">
+                (Share this with the person who will submit the secret)
+              </span>
+              <div className="flex gap-2 mt-2">
                 <input
                   type="text"
                   value={shareableUrl}
@@ -87,10 +106,33 @@ export default function RequestGeneration() {
                   className="input-field flex-1 font-mono text-sm"
                 />
                 <button
-                  onClick={handleCopy}
+                  onClick={handleCopyShareable}
                   className="btn-primary whitespace-nowrap"
                 >
-                  {copied ? "✓ Copied!" : "📋 Copy"}
+                  {copiedShareable ? "✓ Copied!" : "📋 Copy"}
+                </button>
+              </div>
+            </label>
+          </div>
+
+          <div className="bg-gray-900 rounded-lg p-6 mb-6">
+            <label className="label mb-3">
+              Retrieval URL:
+              <span className="text-xs text-gray-500 ml-2 font-normal">
+                (Save this - you'll use it to retrieve the secret)
+              </span>
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="text"
+                  value={retrievalUrl}
+                  readOnly
+                  className="input-field flex-1 font-mono text-sm"
+                />
+                <button
+                  onClick={handleCopyRetrieval}
+                  className="btn-primary whitespace-nowrap"
+                >
+                  {copiedRetrieval ? "✓ Copied!" : "📋 Copy"}
                 </button>
               </div>
             </label>
@@ -98,10 +140,15 @@ export default function RequestGeneration() {
 
           <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4 mb-6">
             <p className="text-sm text-blue-300">
-              💡 <strong>Next Steps:</strong> Share this URL with someone you
-              trust to submit the secret. Once submitted, you'll receive a
-              retrieval link via email.
+              💡 <strong>Next Steps:</strong>
             </p>
+            <ol className="text-sm text-blue-300 mt-2 ml-4 space-y-1">
+              <li>1. Share the Request URL with the person who will submit the secret</li>
+              <li>2. Save the Retrieval URL for yourself</li>
+              <li>3. Once they submit the secret, you'll also receive a notification email</li>
+              <li>4. They will share the password with you separately (e.g., via phone)</li>
+              <li>5. Use the Retrieval URL and password to view the secret</li>
+            </ol>
           </div>
 
           <button onClick={handleReset} className="btn-secondary w-full">
@@ -162,6 +209,26 @@ export default function RequestGeneration() {
             />
             <p className="text-xs text-gray-500 mt-1">
               This will be shown to the person submitting the secret
+            </p>
+          </div>
+
+          {/* Reference (Optional) */}
+          <div>
+            <label htmlFor="reference" className="label">
+              Reference (Optional)
+            </label>
+            <input
+              id="reference"
+              type="text"
+              className="input-field"
+              placeholder="e.g., Project Alpha, Ticket #1234"
+              value={formData.reference}
+              onChange={(e) =>
+                setFormData({ ...formData, reference: e.target.value })
+              }
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Helps identify this request in email notifications
             </p>
           </div>
 

@@ -2,6 +2,7 @@
 export interface CreateRequestPayload {
   requestorEmail: string;
   description: string;
+  reference?: string;
   retentionType: "view" | "time";
   retentionValue: number;
 }
@@ -9,6 +10,7 @@ export interface CreateRequestPayload {
 export interface RequestResponse {
   requestId: string;
   shareableUrl: string;
+  retrievalUrl: string;
 }
 
 export interface RequestDetailsResponse {

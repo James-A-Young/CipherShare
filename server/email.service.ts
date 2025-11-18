@@ -11,16 +11,23 @@ export class EmailService {
   async sendRetrievalLink(
     recipientEmail: string,
     description: string,
+    reference: string | undefined,
     retrievalUrl: string
   ): Promise<void> {
+    const referenceText = reference ? ` (Reference: ${reference})` : '';
+    const referenceHtml = reference 
+      ? `<p style="color: #9ca3af; font-size: 14px; margin-bottom: 10px;">Reference: <strong style="color: #f3f4f6;">${reference}</strong></p>`
+      : '';
+    
     const msg = {
       to: recipientEmail,
       from: this.fromEmail,
-      subject: "CipherShare - Secret Ready for Retrieval",
-      text: `A secret has been submitted for your request: "${description}"\n\nRetrieve it here: ${retrievalUrl}\n\nYou will need the password that was shared with you separately.`,
+      subject: `CipherShare - Secret Ready for Retrieval${referenceText}`,
+      text: `A secret has been submitted for your request: "${description}"${referenceText}\n\nRetrieve it here: ${retrievalUrl}\n\nYou will need the password that was shared with you separately.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #1f2937; color: #f3f4f6; border-radius: 8px;">
           <h2 style="color: #60a5fa;">🔐 CipherShare - Secret Ready</h2>
+          ${referenceHtml}
           <p>A secret has been submitted for your request:</p>
           <p style="background-color: #374151; padding: 15px; border-radius: 4px; border-left: 4px solid #60a5fa;">
             <strong>"${description}"</strong>

@@ -42,7 +42,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
 // Create a new secret request
 app.post("/api/requests", async (req: Request, res: Response) => {
   try {
-    const { requestorEmail, description, retentionType, retentionValue } =
+    const { requestorEmail, description, reference, retentionType, retentionValue } =
       req.body;
 
     // Validation
@@ -64,15 +64,18 @@ app.post("/api/requests", async (req: Request, res: Response) => {
         .json({ error: "Time limit must be 3, 5, or 10 days" });
     }
 
-    // Generate request ID
+    // Generate request ID and retrieval ID upfront
     const requestId = crypto.randomUUID();
+    const retrievalId = crypto.randomUUID();
 
     const secretRequest: SecretRequest = {
       requestId,
       requestorEmail,
       description,
+      reference,
       retentionType,
       retentionValue,
+      retrievalId,
       status: "pending",
       createdAt: Date.now(),
     };
@@ -82,6 +85,7 @@ app.post("/api/requests", async (req: Request, res: Response) => {
     const response: RequestCreationResponse = {
       requestId,
       shareableUrl: `${CLIENT_URL}/request/${requestId}`,
+      retrievalUrl: `${CLIENT_URL}/retrieve/${retrievalId}`,
     };
 
     res.json(response);
@@ -156,8 +160,8 @@ app.post(
         return res.status(400).json({ error: "Request already fulfilled" });
       }
 
-      // Generate retrieval ID
-      const retrievalId = crypto.randomUUID();
+      // Use the pre-generated retrieval ID from the request
+      const retrievalId = request.retrievalId;
 
       // Submit the secret
       await redisService.submitSecret(requestId, secret, password, retrievalId);
@@ -168,6 +172,7 @@ app.post(
         await emailService.sendRetrievalLink(
           request.requestorEmail,
           request.description,
+          request.reference,
           retrievalUrl
         );
       } catch (emailError) {
