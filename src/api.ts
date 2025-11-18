@@ -41,13 +41,24 @@ export interface RetrieveSecretResponse {
   viewsRemaining?: number;
 }
 
-const API_BASE_URL =
-  (typeof process !== "undefined" &&
-    (process.env.VITE_API_URL || process.env.API_BASE_URL)) ||
-  (typeof (globalThis as any).importMetaEnv !== "undefined" &&
-    (globalThis as any).importMetaEnv?.VITE_API_URL) ||
-  "http://localhost:3001/api";
+const getApiBaseUrl = () => {
+  if (typeof process !== "undefined") {
+    if (process.env.VITE_API_URL) {
+      return process.env.VITE_API_URL;
+    }
+    if (process.env.CLIENT_URL) {
+      return process.env.CLIENT_URL + "/api";
+    }
+  }
+  const importMetaEnv = (globalThis as any).importMetaEnv;
+  if (importMetaEnv && importMetaEnv.VITE_API_URL) {
+    return importMetaEnv.VITE_API_URL;
+  }
 
+  return "http://localhost:3001/api";
+}
+
+const API_BASE_URL = getApiBaseUrl();
 export const api = {
   async createRequest(payload: CreateRequestPayload): Promise<RequestResponse> {
     const response = await fetch(`${API_BASE_URL}/requests`, {
