@@ -36,6 +36,7 @@ export interface SecretSubmissionRequest {
 
 export interface SecretRetrievalRequest {
   password: string;
+  turnstileToken?: string; // Optional Turnstile token for CAPTCHA verification
 }
 
 export interface SecretRetrievalResponse {

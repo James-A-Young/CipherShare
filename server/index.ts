@@ -20,8 +20,21 @@ import {
   SecretRetrievalRequest,
   SecretRetrievalResponse,
 } from "./types.js";
+import { verifyTurnstile, isFeatureEnabled } from "./utils.js";
 
 dotenv.config();
+
+// Read Cloudflare Turnstile keys from environment
+// CF_TURNSTILE_SITEKEY is non-secret and will be exposed to the browser via
+// GET /api/config/metadata so the Vite client can initialize the Turnstile widget.
+// CF_TURNSTILE_SECRET must remain server-side and is used to verify tokens.
+const CF_TURNSTILE_SITEKEY = process.env.CF_TURNSTILE_SITEKEY || "";
+const CF_TURNSTILE_SECRET = process.env.CF_TURNSTILE_SECRET || "";
+// Optional CSV of allowed hostnames (e.g. "example.com,app.example.com")
+const CF_TURNSTILE_ALLOWED_HOSTNAMES = process.env.CF_TURNSTILE_ALLOWED_HOSTNAMES || "";
+const allowedHostnames = CF_TURNSTILE_ALLOWED_HOSTNAMES.split(",").map(h => h.trim()).filter(Boolean);
+// Feature flag to disable CAPTCHA requirement
+const CAPTCHA_ENABLED = isFeatureEnabled(process.env.CAPTCHA_ENABLED ?? "true");
 
 // ESM __dirname polyfill
 const __filename = fileURLToPath(import.meta.url);
@@ -72,6 +85,14 @@ app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: Date.now(), source: req.ip});
 });
 
+// Expose application metadata and configuration to the client
+app.get("/api/config/metadata", (_req: Request, res: Response) => {
+  res.json({
+    captchaEnabled: CAPTCHA_ENABLED,
+    turnstileSiteKey: CAPTCHA_ENABLED ? CF_TURNSTILE_SITEKEY : undefined,
+  });
+});
+
 // Create a new secret request
 app.post(
   "/api/requests",
@@ -85,6 +106,24 @@ app.post(
         retentionType,
         retentionValue,
       } = req.body;
+
+      // Validate CAPTCHA if enabled
+      if (CAPTCHA_ENABLED) {
+        const { turnstileToken } = req.body;
+        if (!turnstileToken) {
+          return res.status(400).json({ error: "CAPTCHA token is required" });
+        }
+        const clientIp = req.ip;
+        const captchaValid = await verifyTurnstile(
+          turnstileToken,
+          CF_TURNSTILE_SECRET,
+          clientIp,
+          allowedHostnames
+        );
+        if (!captchaValid) {
+          return res.status(401).json({ error: "CAPTCHA validation failed" });
+        }
+      }
 
       // Validation
       if (
@@ -249,10 +288,27 @@ app.post(
   async (req: Request, res: Response) => {
     try {
       const { retrievalId } = req.params;
-      const { password }: SecretRetrievalRequest = req.body;
+      const { password, turnstileToken }: SecretRetrievalRequest = req.body;
 
       if (!password) {
         return res.status(400).json({ error: "Password is required" });
+      }
+
+      // Validate CAPTCHA if enabled
+      if (CAPTCHA_ENABLED) {
+        if (!turnstileToken) {
+          return res.status(400).json({ error: "CAPTCHA token is required" });
+        }
+        const clientIp = req.ip;
+        const captchaValid = await verifyTurnstile(
+          turnstileToken,
+          CF_TURNSTILE_SECRET,
+          clientIp,
+          allowedHostnames
+        );
+        if (!captchaValid) {
+          return res.status(401).json({ error: "CAPTCHA validation failed" });
+        }
       }
 
       const result = await redisService.retrieveSecret(retrievalId, password);

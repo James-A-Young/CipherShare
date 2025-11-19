@@ -4,6 +4,8 @@ export interface CreateRequestPayload {
   reference?: string;
   retentionType: "view" | "time";
   retentionValue: number;
+  // Cloudflare Turnstile token obtained from the client widget
+  turnstileToken?: string;
 }
 
 export interface RequestResponse {
@@ -34,11 +36,18 @@ export interface SubmitSecretResponse {
 
 export interface RetrieveSecretPayload {
   password: string;
+  // Cloudflare Turnstile token obtained from the client widget
+  turnstileToken?: string;
 }
 
 export interface RetrieveSecretResponse {
   secret: string;
   viewsRemaining?: number;
+}
+
+export interface AppMetadata {
+  captchaEnabled: boolean;
+  turnstileSiteKey?: string;
 }
 
 const getApiBaseUrl = () => {
@@ -61,6 +70,14 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 export const api = {
+  async getMetadata(): Promise<AppMetadata> {
+    const response = await fetch(`${API_BASE_URL}/config/metadata`);
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Failed to fetch app metadata');
+    }
+    return response.json();
+  },
   async createRequest(payload: CreateRequestPayload): Promise<RequestResponse> {
     const response = await fetch(`${API_BASE_URL}/requests`, {
       method: "POST",
