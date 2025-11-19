@@ -163,10 +163,10 @@ export default function SecretSubmission() {
           </div>
 
           <div className="bg-green-500 bg-opacity-10 border border-green-500 border-opacity-30 rounded-lg p-6 mb-6">
-            <p className="text-green-300 mb-4">
+            <p className="text-green-200 mb-4">
               ✓ A unique retrieval link has been sent to the requestor's email.
             </p>
-            <p className="text-sm text-green-200">
+            <p className="text-sm text-green-100">
               <strong>Important:</strong> Please share your password with the
               requestor through a secure side channel (like a jira ticket, phone
               call, teams or slack message, or in person). They will need it to decrypt
@@ -186,7 +186,7 @@ export default function SecretSubmission() {
           )}
 
           <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4">
-            <p className="text-sm text-blue-300">
+            <p className="text-sm text-blue-200">
               🔒 Your secret is protected with dual-layer encryption and will
               automatically expire based on the retention policy set by the
               requestor.
@@ -217,7 +217,7 @@ export default function SecretSubmission() {
           </p>
 
           <div className="mt-4 pt-4 border-t border-blue-500 border-opacity-20">
-            <p className="text-sm text-blue-300">
+            <p className="text-sm text-blue-200">
               Retention:{" "}
               <strong>
                 {request?.retentionType === "view"
@@ -314,7 +314,7 @@ export default function SecretSubmission() {
 
           {error && (
             <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4">
-              <p className="text-red-400 text-sm">{error}</p>
+              <p className="text-red-200 text-sm">{error}</p>
             </div>
           )}
 

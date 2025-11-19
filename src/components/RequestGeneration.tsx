@@ -206,10 +206,10 @@ export default function RequestGeneration() {
           </div>
 
           <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-300">
+            <p className="text-sm text-blue-200">
               💡 <strong>Next Steps:</strong>
             </p>
-            <ol className="text-sm text-blue-300 mt-2 ml-4 space-y-1">
+            <ol className="text-sm text-blue-200 mt-2 ml-4 space-y-1">
               <li>
                 1. Share the Request URL with the person who will submit the
                 secret
@@ -406,7 +406,7 @@ export default function RequestGeneration() {
 
           {error && (
             <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4">
-              <p className="text-red-400 text-sm">{error}</p>
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
 

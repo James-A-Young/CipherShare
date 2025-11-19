@@ -160,7 +160,7 @@ export default function SecretRetrieval() {
           </div>
 
           <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500 border-opacity-30 rounded-lg p-4 mb-4">
-            <p className="text-sm text-yellow-300">
+            <p className="text-sm text-yellow-200">
               ⚠️ <strong>Security Notice:</strong> Make sure to copy this secret
               now. Depending on the retention policy, it may not be available
               after you close this page.
@@ -169,7 +169,7 @@ export default function SecretRetrieval() {
 
           {viewsRemaining === 0 && (
             <div className="bg-red-500 bg-opacity-10 border border-red-500 border-opacity-30 rounded-lg p-4">
-              <p className="text-sm text-red-300">
+              <p className="text-sm text-red-200">
                 🗑️ This secret has been permanently deleted from our servers.
               </p>
             </div>
@@ -207,7 +207,7 @@ export default function SecretRetrieval() {
         </div>
 
         <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4 mb-8">
-          <p className="text-sm text-blue-300">
+          <p className="text-sm text-blue-200">
             🔑 You should have received this password through a secure side
             channel (not email). The password is required to decrypt the secret.
           </p>
@@ -235,21 +235,21 @@ export default function SecretRetrieval() {
 
           {error && (
             <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4">
-              <p className="text-red-400 text-sm">
+              <p className="text-red-100 text-sm">
                 {error === "Invalid password" && "❌ "}
                 {error === "Secret not found or expired" && "⏰ "}
                 {error === "Secret has expired" && "⏰ "}
                 {error}
               </p>
               {error === "Invalid password" && (
-                <p className="text-red-300 text-xs mt-2">
+                <p className="text-red-200 text-xs mt-2">
                   Make sure you're using the password that was shared with you
                   separately.
                 </p>
               )}
               {(error === "Secret not found or expired" ||
                 error === "Secret has expired") && (
-                <p className="text-red-300 text-xs mt-2">
+                <p className="text-red-200 text-xs mt-2">
                   The secret may have reached its view limit or time expiration.
                 </p>
               )}
