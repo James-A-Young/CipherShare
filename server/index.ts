@@ -73,7 +73,7 @@ const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
 // Trust proxy configuration (important for rate limiting and IP detection)
 const proxyLayers = process.env.PROXY_LAYERS 
-  ? parseInt(process.env.PROXY_LAYERS) 
+  ? Number.parseInt(process.env.PROXY_LAYERS) 
   : 1; // Default to 1 for common Docker/K8s setups
 
 if (proxyLayers > 0) {
@@ -149,7 +149,7 @@ app.get(/^\/(?!api\/).*/, (req: Request, res: Response, next: Function) => {
 });
 // Services
 // SYSTEM_SECRET_KEY is validated at startup, safe to use directly
-const cryptoService = new CryptoService(process.env.SYSTEM_SECRET_KEY!);
+const cryptoService = new CryptoService(process.env.SYSTEM_SECRET_KEY);
 const redisService = new RedisService(cryptoService);
 
 // Email service configuration
@@ -369,7 +369,7 @@ app.post(
       }
 
       // Validate CAPTCHA if enabled
-      if (CAPTCHA_ENABLED) {
+      if (CAPTCHA_ENABLED && !turnstileToken) {
         if (!turnstileToken) {
           return res.status(400).json({ error: "CAPTCHA token is required" });
         }
