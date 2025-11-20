@@ -47,6 +47,8 @@ npm test
 npm run test:watch
 ```
 
+> **Tip**: For local development, you can disable CAPTCHA by setting `CAPTCHA_ENABLED=false` in your `.env` file for easier testing.
+
 ### Code Style
 
 We use TypeScript with strict mode enabled. Please ensure:

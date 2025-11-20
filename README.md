@@ -2,6 +2,8 @@
 
 **CipherShare** is a secure secret sharing application that allows users to request, submit, and retrieve sensitive information with dual-layer encryption. Built with React, TypeScript, Tailwind CSS, Express, and Redis.
 
+**Version 1.1.0** - Now with optional Cloudflare Turnstile CAPTCHA protection
+
 ![CipherShare Banner](https://img.shields.io/badge/Security-Dual%20Encryption-blue?style=for-the-badge)
 ![Node.js](https://img.shields.io/badge/Node.js-24%20LTS-339933?style=for-the-badge&logo=node.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=for-the-badge&logo=typescript)
@@ -48,6 +50,14 @@
 - Secure HTML-formatted emails
 - Automatic notification on secret submission
 - Reference field included in notifications
+
+### 🤖 CAPTCHA Protection
+
+- **Cloudflare Turnstile** integration for bot prevention
+- **Environment-based toggle** - Enable/disable via `CAPTCHA_ENABLED`
+- Protected endpoints: Request creation and secret retrieval
+- Seamless user experience when enabled
+- Easy to disable for development/testing
 
 ## 🏗️ Tech Stack
 
@@ -145,6 +155,12 @@ MAILGUN_DOMAIN=your-domain.com
 # Server Configuration
 PORT=3001
 CLIENT_URL=http://localhost:5173
+
+# CAPTCHA Configuration (Optional)
+CAPTCHA_ENABLED=false  # Set to true to enable Turnstile CAPTCHA
+CF_TURNSTILE_SITEKEY=  # Your Cloudflare Turnstile site key
+CF_TURNSTILE_SECRET=   # Your Cloudflare Turnstile secret key
+CF_TURNSTILE_ALLOWED_HOSTNAMES=  # Optional: comma-separated allowed hostnames
 ```
 
 > ⚠️ **Important**: Generate a secure random system key for production:
@@ -246,7 +262,22 @@ http://localhost:3001/api
 
 ### Endpoints
 
-#### 1. Create a Secret Request
+#### 1. Get Application Metadata
+
+**GET** `/api/config/metadata`
+
+Returns application configuration including CAPTCHA status.
+
+**Response:**
+
+```json
+{
+  "captchaEnabled": false,
+  "turnstileSiteKey": "1x00000000000000000000AA"  // Only present if CAPTCHA enabled
+}
+```
+
+#### 2. Create a Secret Request
 
 **POST** `/api/requests`
 
@@ -272,7 +303,7 @@ Creates a new secret request and returns a shareable URL.
 }
 ```
 
-#### 2. Get Request Details
+#### 3. Get Request Details
 
 **GET** `/api/requests/:requestId`
 
@@ -290,7 +321,7 @@ Retrieves information about a secret request.
 }
 ```
 
-#### 3. Submit a Secret
+#### 4. Submit a Secret
 
 **POST** `/api/requests/:requestId/submit`
 
@@ -316,17 +347,20 @@ Submits a secret for a request and sends notification email.
 }
 ```
 
-#### 4. Retrieve a Secret
+#### 5. Retrieve a Secret
 
 **POST** `/api/secrets/:retrievalId`
 
 Retrieves and decrypts a secret using the password.
 
+> **Note**: If `CAPTCHA_ENABLED=true`, a `turnstileToken` field is required in the request body.
+
 **Request Body:**
 
 ```json
 {
-  "password": "StrongPassword123!"
+  "password": "StrongPassword123!",
+  "turnstileToken": "optional-if-captcha-enabled"
 }
 ```
 
@@ -341,7 +375,11 @@ Retrieves and decrypts a secret using the password.
 
 ## 🔐 Security Architecture
 
-### Rate Limiting
+### Rate Limiting & CAPTCHA
+
+CipherShare uses multiple layers of protection against abuse:
+
+**Rate Limiting** - IP-based request limits:
 
 API rate limiting protects against abuse and brute force attacks:
 
@@ -355,6 +393,15 @@ API rate limiting protects against abuse and brute force attacks:
 Rate limit headers (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`) are included in all responses.
 
 **📚 For detailed information**, see [Rate Limiting Documentation](docs/RATE_LIMITING.md)
+
+**CAPTCHA Protection** - Optional bot prevention:
+
+- **Cloudflare Turnstile** - Modern, privacy-friendly CAPTCHA
+- **Protected Endpoints**: Request creation and secret retrieval
+- **Toggle via Environment**: Set `CAPTCHA_ENABLED=true/false`
+- **Development Friendly**: Easily disabled for local testing
+
+**📚 For configuration details**, see [CAPTCHA Configuration](docs/CAPTCHA_CONFIGURATION.md)
 
 ### Dual Encryption Process
 
@@ -432,6 +479,13 @@ Ensure you set these in your production environment:
 - `CLIENT_URL` - Your production frontend URL
 - `REDIS_HOST` - Redis host (use service name in Docker)
 - `REDIS_PASSWORD` - Secure Redis password
+
+**CAPTCHA Configuration (Optional but recommended for production):**
+
+- `CAPTCHA_ENABLED` - Set to `true` to enable bot protection
+- `CF_TURNSTILE_SITEKEY` - Cloudflare Turnstile site key (public)
+- `CF_TURNSTILE_SECRET` - Cloudflare Turnstile secret key (keep private)
+- `CF_TURNSTILE_ALLOWED_HOSTNAMES` - Optional: restrict to specific domains
 
 ## 🛠️ Project Structure
 
@@ -515,6 +569,7 @@ For more detailed information, see:
 - **[Architecture](ARCHITECTURE.md)** - System design and technical architecture
 - **[Email Providers](docs/EMAIL_PROVIDERS.md)** - Email configuration (SendGrid/Mailgun)
 - **[Rate Limiting](docs/RATE_LIMITING.md)** - Comprehensive rate limiting guide
+- **[CAPTCHA Configuration](docs/CAPTCHA_CONFIGURATION.md)** - Turnstile CAPTCHA setup
 - **[Docker Deployment](docs/DOCKER_DEPLOYMENT.md)** - 🐳 Production Docker setup
 - **[API Reference](QUICK_REFERENCE.md)** - API endpoints and configuration
 - **[Contributing](CONTRIBUTING.md)** - Development guidelines

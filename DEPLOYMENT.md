@@ -40,6 +40,13 @@ Use this checklist when deploying CipherShare to production.
 - [ ] **Update CLIENT_URL**
   - Set to your production domain (e.g., `https://ciphershare.yourdomain.com`)
 
+- [ ] **Configure CAPTCHA (Recommended for Production)**
+  - [ ] Set `CAPTCHA_ENABLED=true`
+  - [ ] Create Cloudflare Turnstile account
+  - [ ] Generate site key and secret key
+  - [ ] Update `CF_TURNSTILE_SITEKEY` and `CF_TURNSTILE_SECRET`
+  - [ ] Optionally set `CF_TURNSTILE_ALLOWED_HOSTNAMES`
+
 ### Environment Variables
 
 Verify all required environment variables are set:
@@ -55,6 +62,12 @@ Verify all required environment variables are set:
 ✓ SENDGRID_FROM_EMAIL=<verified-email>
 ✓ PORT=3001
 ✓ CLIENT_URL=<your-production-url>
+
+# Recommended for production
+✓ CAPTCHA_ENABLED=true
+✓ CF_TURNSTILE_SITEKEY=<turnstile-site-key>
+✓ CF_TURNSTILE_SECRET=<turnstile-secret>
+✓ CF_TURNSTILE_ALLOWED_HOSTNAMES=<your-domain>
 ```
 
 ## Testing Before Deployment
@@ -217,6 +230,7 @@ server {
   - Invalid request ID
   - Wrong password
   - Expired secret
+  - CAPTCHA validation (if enabled)
 
 ### Monitoring
 
@@ -289,6 +303,11 @@ server {
 - [ ] **Input validation**
   - Already implemented in API
   - Verify all edge cases tested
+
+- [ ] **CAPTCHA protection**
+  - Enable `CAPTCHA_ENABLED=true` for production
+  - Configure Cloudflare Turnstile keys
+  - Test CAPTCHA on request creation and secret retrieval
 
 ### Operational Security
 
@@ -405,6 +424,6 @@ Before going live:
 
 ---
 
-**Last Updated**: [Date]
+**Last Updated**: November 20, 2025 (Version 1.1.0)
 **Reviewed By**: [Team member]
 **Next Review**: [Date]

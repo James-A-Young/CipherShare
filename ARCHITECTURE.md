@@ -191,6 +191,20 @@ secret:{retrievalId} → {
 
 **Purpose**: Send notification emails via SendGrid or Mailgun.
 
+#### 4. Utility Functions (utils.ts)
+
+**Purpose**: Provide common utility functions for the server.
+
+**Functions**:
+
+```typescript
+// CAPTCHA verification with Cloudflare Turnstile
+verifyTurnstile(token: string, secret: string, remoteIp?: string, allowedHostnames?: string[]): Promise<boolean>
+
+// Parse boolean environment variables
+isFeatureEnabled(value: string): boolean
+```
+
 **Email Types**:
 
 1. **Retrieval Link Email**: Sent when secret is submitted
@@ -198,7 +212,7 @@ secret:{retrievalId} → {
    - Instructions for password
    - Security reminders
 
-#### 4. Rate Limiters
+#### 5. Rate Limiters
 
 **Purpose**: Protect API endpoints from abuse and attacks.
 
@@ -298,6 +312,57 @@ When limit is exceeded:
 Status code: `429 Too Many Requests`
 
 **📚 For comprehensive rate limiting documentation**, including client handling, production considerations, and testing strategies, see [docs/RATE_LIMITING.md](docs/RATE_LIMITING.md)
+
+### CAPTCHA Protection (Optional)
+
+CipherShare includes optional Cloudflare Turnstile CAPTCHA integration to prevent automated abuse:
+
+**Feature Toggle**:
+- Environment variable: `CAPTCHA_ENABLED` (default: `true`)
+- Can be enabled/disabled without code changes
+
+**Protected Endpoints**:
+- `POST /api/requests` - Prevents automated request creation
+- `POST /api/secrets/:retrievalId` - Prevents automated password guessing
+
+**Implementation Details**:
+
+```typescript
+// Server validates token if CAPTCHA is enabled
+if (CAPTCHA_ENABLED) {
+  const { turnstileToken } = req.body;
+  if (!turnstileToken) {
+    return res.status(400).json({ error: 'CAPTCHA token is required' });
+  }
+  
+  const captchaValid = await verifyTurnstile(
+    turnstileToken,
+    CF_TURNSTILE_SECRET,
+    req.ip,
+    allowedHostnames
+  );
+  
+  if (!captchaValid) {
+    return res.status(401).json({ error: 'CAPTCHA validation failed' });
+  }
+}
+// Continue with request processing...
+```
+
+**Client Integration**:
+- Frontend fetches metadata from `/api/config/metadata`
+- Turnstile widget loads only if `captchaEnabled: true`
+- Token automatically included in protected API calls
+
+**Configuration**:
+```env
+CAPTCHA_ENABLED=true
+CF_TURNSTILE_SITEKEY=1x00000000000000000000AA
+CF_TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+CF_TURNSTILE_ALLOWED_HOSTNAMES=example.com,app.example.com
+```
+
+**📚 For complete CAPTCHA configuration**, see [docs/CAPTCHA_CONFIGURATION.md](docs/CAPTCHA_CONFIGURATION.md)
 
 ### Encryption Layers
 
@@ -463,13 +528,14 @@ await redis.set(key, value, "EX", ttl);
 
 ### RESTful Endpoints
 
-| Method | Endpoint                 | Purpose         | Auth     |
-| ------ | ------------------------ | --------------- | -------- |
-| GET    | /api/health              | Health check    | No       |
-| POST   | /api/requests            | Create request  | No       |
-| GET    | /api/requests/:id        | Get request     | No       |
-| POST   | /api/requests/:id/submit | Submit secret   | No       |
-| POST   | /api/secrets/:id         | Retrieve secret | Password |
+| Method | Endpoint                 | Purpose                | Auth       | CAPTCHA  |
+| ------ | ------------------------ | ---------------------- | ---------- | -------- |
+| GET    | /api/health              | Health check           | No         | No       |
+| GET    | /api/config/metadata     | Get app configuration  | No         | No       |
+| POST   | /api/requests            | Create request         | No         | Optional |
+| GET    | /api/requests/:id        | Get request            | No         | No       |
+| POST   | /api/requests/:id/submit | Submit secret          | No         | No       |
+| POST   | /api/secrets/:id         | Retrieve secret        | Password   | Optional |
 
 ### Error Handling
 
@@ -563,6 +629,7 @@ Standard HTTP status codes:
    - Multiple secrets per request
    - Secret sharing groups
    - Custom expiration times
+   - Multi-language CAPTCHA support
 
 ### Testing Architecture
 
@@ -613,4 +680,4 @@ Tailwind CSS v4 introduces a **CSS-first configuration approach**:
 
 ---
 
-**Last Updated**: November 18, 2025
+**Last Updated**: November 20, 2025 (Version 1.1.0 - Added CAPTCHA support)

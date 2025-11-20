@@ -2,7 +2,7 @@
 
 ## ✅ Project Completion Status
 
-All core requirements have been successfully implemented! Here's what was delivered:
+**Version 1.1.0** - All core requirements successfully implemented with CAPTCHA protection!
 
 ### 🏗️ Infrastructure & Setup
 
@@ -13,6 +13,7 @@ All core requirements have been successfully implemented! Here's what was delive
 - ✅ Docker + Docker Compose for Redis
 - ✅ Dual testing framework (Vitest + Jest)
 - ✅ Complete development environment setup
+- ✅ **NEW in v1.1.0:** Cloudflare Turnstile CAPTCHA integration
 
 ### 🔐 Security Features
 
@@ -24,6 +25,11 @@ All core requirements have been successfully implemented! Here's what was delive
 - ✅ No password storage (only hashes)
 - ✅ Unique IVs for every encryption
 - ✅ Authentication tags for integrity verification
+- ✅ **NEW in v1.1.0:** Optional CAPTCHA protection
+  - Cloudflare Turnstile integration
+  - Environment-based toggle (CAPTCHA_ENABLED)
+  - Protects request creation and secret retrieval
+  - Easy to disable for development/testing
 
 ### 💾 Data Management
 
@@ -63,18 +69,40 @@ All core requirements have been successfully implemented! Here's what was delive
 
 #### Express Server (server/index.ts)
 
+- ✅ **GET /api/health** - Health check endpoint
+- ✅ **GET /api/config/metadata** - Get app configuration (NEW v1.1.0)
 - ✅ **POST /api/requests** - Create secret request
 - ✅ **GET /api/requests/:id** - Get request details
 - ✅ **POST /api/requests/:id/submit** - Submit encrypted secret
 - ✅ **POST /api/secrets/:id** - Retrieve and decrypt secret
-- ✅ **GET /api/health** - Health check endpoint
 - ✅ CORS configuration
+- ✅ Rate limiting middleware
+- ✅ CAPTCHA validation (optional)
 - ✅ Error handling middleware
 - ✅ Graceful shutdown handlers
 
+#### Utilities (server/utils.ts) - NEW v1.1.0
+
+- ✅ **verifyTurnstile()** - CAPTCHA verification with Cloudflare
+- ✅ **isFeatureEnabled()** - Parse boolean environment variables
+- ✅ Hostname validation support
+- ✅ Error handling for external API calls
+
+### 📧 Email Integrationrotection
+
+- ✅ **Multi-tier rate limiting** using express-rate-limit
+  - General API: 100 req/15min
+  - Request creation: 10 req/15min
+  - Secret submission: 5 req/15min
+  - Secret retrieval: 10 req/15min
+- ✅ Dedicated rate-limiters module
+- ✅ RFC-compliant RateLimit headers
+- ✅ Protects against brute force and DDoS
+
 ### 📧 Email Integration
 
-- ✅ **EmailService** with SendGrid
+- ✅ **EmailService** with SendGrid and Mailgun support
+- ✅ Provider selection via EMAIL_PROVIDER env var
 - ✅ HTML email templates
 - ✅ Retrieval link notifications
 - ✅ Dark-themed email design
@@ -96,8 +124,13 @@ All core requirements have been successfully implemented! Here's what was delive
 - ✅ **README.md** - Comprehensive project documentation
 - ✅ **QUICKSTART.md** - 5-minute setup guide
 - ✅ **ARCHITECTURE.md** - Technical architecture deep-dive
+- ✅ **QUICK_REFERENCE.md** - Developer quick reference
 - ✅ **CONTRIBUTING.md** - Contribution guidelines
+- ✅ **DEPLOYMENT.md** - Production deployment checklist
 - ✅ **LICENSE** - MIT License
+- ✅ **docs/EMAIL_PROVIDERS.md** - Email configuration guide
+- ✅ **docs/RATE_LIMITING.md** - Rate limiting documentation
+- ✅ **docs/CAPTCHA_CONFIGURATION.md** - CAPTCHA setup guide (NEW v1.1.0)
 - ✅ API endpoint documentation
 - ✅ Security architecture diagrams
 - ✅ Data flow diagrams
@@ -212,6 +245,7 @@ npm run build
 - ✅ Real-time form validation
 - ✅ Loading states and error handling
 - ✅ Success/error notifications
+- ✅ **NEW v1.1.0:** Seamless CAPTCHA integration (when enabled)
 
 ### Developer Experience
 
@@ -317,15 +351,14 @@ npm run build
 - ✅ **100%** of requirements implemented
 - ✅ **All** three user flows working
 - ✅ **Full** dual-encryption security
-- ✅ **Complete** documentation
+- ✅ **Multi-layer** protection (encryption + rate limiting + CAPTCHA)
+- ✅ **Complete** documentation (10+ doc files)
 - ✅ **Production-ready** architecture
 - ✅ **Comprehensive** test coverage structure
 - ✅ **Modern** UI/UX design
+- ✅ **Flexible** CAPTCHA configuration
 
 ## 🙏 Next Steps
-
-The project is fully functional and ready to use! You can:
-
 1. Run the setup script: `./scripts/setup.sh`
 2. Start the development servers: `npm run dev`
 3. Test the three workflows end-to-end
@@ -338,5 +371,24 @@ The project is fully functional and ready to use! You can:
 - 🚀 Use QUICKSTART.md for quick setup
 - 🏗️ Read ARCHITECTURE.md for technical details
 - 🤝 See CONTRIBUTING.md for development guidelines
+
+## 🆕 Version History
+
+### v1.1.0 (November 2025)
+- ✨ Added Cloudflare Turnstile CAPTCHA integration
+- ✨ Environment-based CAPTCHA toggle (CAPTCHA_ENABLED)
+- ✨ New `/api/config/metadata` endpoint
+- ✨ Updated all documentation for CAPTCHA support
+- ✨ Added `server/utils.ts` with utility functions
+- ✨ Updated SecretRetrieval component with CAPTCHA support
+
+### v1.0.0 (November 2025)
+- 🎉 Initial release with all core features
+- Dual-layer encryption (AES-256-GCM + PBKDF2)
+- Three complete user flows
+- Multi-provider email support (SendGrid/Mailgun)
+- Multi-tier rate limiting
+- Comprehensive documentation
+- Docker deployment support
 
 ---

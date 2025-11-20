@@ -64,7 +64,6 @@ docker-compose -f docker-compose.prod.yml up -d  # Deploy
 - `docker-compose.yml` - Docker services
 
 ## 🔐 API Endpoints
-
 ### Rate Limits
 
 All endpoints are rate-limited to prevent abuse:
@@ -75,6 +74,15 @@ All endpoints are rate-limited to prevent abuse:
 | Create Request  | 10 req  | 15 min |
 | Submit Secret   | 5 req   | 15 min |
 | Retrieve Secret | 10 req  | 15 min |
+
+### Get Application Metadata
+
+```bash
+GET /api/config/metadata
+# Returns configuration including CAPTCHA status
+# Response: { "captchaEnabled": false, "turnstileSiteKey": "..." }
+```
+
 
 **Response Headers:**
 
@@ -117,7 +125,8 @@ POST /api/requests/:requestId/submit
 ```bash
 POST /api/secrets/:retrievalId
 {
-  "password": "StrongPass123!"
+  "password": "StrongPass123!",
+  "turnstileToken": "optional-if-captcha-enabled"
 }
 ```
 
@@ -143,6 +152,12 @@ MAILGUN_DOMAIN=mg.yourdomain.com
 # Server
 PORT=3001
 CLIENT_URL=http://localhost:5173
+
+# CAPTCHA (Optional)
+CAPTCHA_ENABLED=false  # true for production
+CF_TURNSTILE_SITEKEY=  # Cloudflare Turnstile site key
+CF_TURNSTILE_SECRET=   # Cloudflare Turnstile secret
+CF_TURNSTILE_ALLOWED_HOSTNAMES=  # Optional hostname restrictions
 ```
 
 ### Email Provider Setup
@@ -162,6 +177,15 @@ EMAIL_PROVIDER=mailgun
 MAILGUN_API_KEY=xxxxx
 MAILGUN_DOMAIN=mg.yourdomain.com
 EMAIL_FROM=noreply@yourdomain.com
+```
+
+**CAPTCHA (Production Recommended):**
+
+```bash
+CAPTCHA_ENABLED=true
+CF_TURNSTILE_SITEKEY=1x00000000000000000000AA
+CF_TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+CF_TURNSTILE_ALLOWED_HOSTNAMES=yourdomain.com
 ```
 
 ## 🧪 Testing
@@ -374,6 +398,7 @@ console.log(decrypted === "test"); // Should be true
 - [README.md](README.md) - Full documentation
 - [QUICKSTART.md](QUICKSTART.md) - Quick setup
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Technical details
+- [CAPTCHA Configuration](docs/CAPTCHA_CONFIGURATION.md) - CAPTCHA setup
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Deploy guide
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Contribute
 

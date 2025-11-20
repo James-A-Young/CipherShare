@@ -57,6 +57,7 @@ Key settings:
 - `SYSTEM_SECRET_KEY`: Your encryption key (change for production!)
 - `EMAIL_PROVIDER`: Choose `sendgrid` or `mailgun` (default: sendgrid)
 - `EMAIL_FROM`: Your verified sender email
+- `CAPTCHA_ENABLED`: Enable CAPTCHA (default: false for local dev, true recommended for production)
 
 **For SendGrid:**
 
@@ -66,6 +67,15 @@ Key settings:
 
 - `MAILGUN_API_KEY`: Get from https://mailgun.com/
 - `MAILGUN_DOMAIN`: Your Mailgun domain (e.g., mg.yourdomain.com)
+
+**For CAPTCHA (Optional - Recommended for Production):**
+
+- `CAPTCHA_ENABLED`: Set to `true` to enable bot protection
+- `CF_TURNSTILE_SITEKEY`: Get from https://dash.cloudflare.com/
+- `CF_TURNSTILE_SECRET`: Your Cloudflare Turnstile secret key
+- `CF_TURNSTILE_ALLOWED_HOSTNAMES`: Optional hostname restrictions
+
+> **Note**: CAPTCHA is disabled by default (`false`) for easier local development. The application works perfectly without CAPTCHA for testing purposes.
 
 ### 4. Start Development Servers
 
@@ -170,7 +180,8 @@ npm run test:watch
 
 - 📖 Read the full [README.md](README.md) for detailed documentation
 - 🔐 Configure email provider (SendGrid or Mailgun) for notifications
-- 🚢 Check [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines
+- 🤖 Enable CAPTCHA protection for production ([docs/CAPTCHA_CONFIGURATION.md](docs/CAPTCHA_CONFIGURATION.md))
+- 🚀 Check [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines
 - 🐳 See Docker deployment options
 
 ## Need Help?
