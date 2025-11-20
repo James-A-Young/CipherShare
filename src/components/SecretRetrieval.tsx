@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { api, RetrieveSecretPayload } from "../api";
+import { useTurnstile } from "../hooks/useTurnstile";
 
 export default function SecretRetrieval() {
   const { retrievalId } = useParams<{ retrievalId: string }>();
@@ -11,67 +12,9 @@ export default function SecretRetrieval() {
   const [error, setError] = useState<string>("");
   const [retrieved, setRetrieved] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [captchaEnabled, setCaptchaEnabled] = useState<boolean>(true);
-  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string>("");
-  const [turnstileToken, setTurnstileToken] = useState<string>("");
-  const turnstileWidgetRef = useRef<HTMLDivElement | null>(null);
-
-  // Load app metadata (including CAPTCHA config) on mount
-  useEffect(() => {
-    let mounted = true;
-    api.getMetadata()
-      .then((metadata) => {
-        if (!mounted) return;
-        setCaptchaEnabled(metadata.captchaEnabled);
-        if (metadata.captchaEnabled && metadata.turnstileSiteKey) {
-          setTurnstileSiteKey(metadata.turnstileSiteKey);
-        }
-      })
-      .catch((err) => {
-        // If metadata fetch fails, log the error
-        console.error("Failed to fetch app metadata:", err instanceof Error ? err.message : err);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // Inject Turnstile script and render the widget when siteKey available
-  useEffect(() => {
-    if (!turnstileSiteKey) return;
-
-    // If script already present, render directly
-    const existing = document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]');
-    const renderWidget = () => {
-      // @ts-ignore - turnstile is attached to window when script loads
-      if (window.turnstile && turnstileWidgetRef.current) {
-        // @ts-ignore
-        window.turnstile.render(turnstileWidgetRef.current, {
-          sitekey: turnstileSiteKey,
-          callback: (token: string) => {
-            setTurnstileToken(token);
-          },
-          'error-callback': () => setTurnstileToken("")
-        });
-      }
-    };
-
-    if (existing) {
-      renderWidget();
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-    script.async = true;
-    script.onload = renderWidget;
-    document.body.appendChild(script);
-
-    return () => {
-      // We won't remove the script element to avoid breaking other pages
-    };
-  }, [turnstileSiteKey]);
+  
+  // CAPTCHA hook
+  const { captchaEnabled, turnstileSiteKey, turnstileToken, turnstileWidgetRef } = useTurnstile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
