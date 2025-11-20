@@ -20,8 +20,8 @@ redisClient.on("error", (err) => {
 
 // Create store factory
 const createRedisStore = (prefix: string) => new RedisStore({
-  // @ts-expect-error - rate-limit-redis types are not perfect
-  client: redisClient,
+  // The function receives individual command arguments as rest parameters
+  sendCommand: (...args: string[]) => redisClient.sendCommand(args),
   prefix: `rl:${prefix}:`, // Rate limit prefix with namespace
 });
 
