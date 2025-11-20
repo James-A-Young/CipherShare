@@ -49,8 +49,20 @@ export default function SecretSubmission() {
       return;
     }
 
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters");
+    if (formData.password.length < 12) {
+      setError("Password must be at least 12 characters");
+      return;
+    }
+
+    // Check password complexity
+    const hasUppercase = /[A-Z]/.test(formData.password);
+    const hasLowercase = /[a-z]/.test(formData.password);
+    const hasNumber = /[0-9]/.test(formData.password);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password);
+    const complexityMet = [hasUppercase, hasLowercase, hasNumber, hasSpecial].filter(Boolean).length >= 3;
+
+    if (!complexityMet) {
+      setError("Password must contain at least 3 of: uppercase letter, lowercase letter, number, special character");
       return;
     }
 
@@ -267,10 +279,24 @@ export default function SecretSubmission() {
                 setFormData({ ...formData, password: e.target.value })
               }
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Minimum 8 characters. You'll share this separately with the
-              requestor.
-            </p>
+            <div className="mt-2 text-xs text-gray-400 space-y-1">
+              <p className="font-medium">Password must have:</p>
+              <ul className="list-disc list-inside space-y-0.5 ml-2">
+                <li className={formData.password.length >= 12 ? "text-green-400" : ""}>
+                  At least 12 characters
+                </li>
+                <li className={(
+                  [/[A-Z]/.test(formData.password), /[a-z]/.test(formData.password), 
+                   /[0-9]/.test(formData.password), /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)]
+                   .filter(Boolean).length >= 3
+                ) ? "text-green-400" : ""}>
+                  At least 3 of: uppercase, lowercase, number, special character
+                </li>
+              </ul>
+              <p className="mt-2 text-gray-500">
+                You'll share this separately with the requestor (e.g., via phone).
+              </p>
+            </div>
           </div>
 
           {/* Confirm Password */}

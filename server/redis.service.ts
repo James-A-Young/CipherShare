@@ -17,10 +17,35 @@ export class RedisService {
         process.env.REDIS_PORT || 6379
       }`,
       password: process.env.REDIS_PASSWORD || undefined,
+      socket: {
+        reconnectStrategy: (retries) => {
+          if (retries > 10) {
+            console.error('❌ Max Redis reconnection attempts reached');
+            return new Error('Max reconnection attempts reached');
+          }
+          const delay = Math.min(retries * 100, 3000);
+          console.log(`⏳ Reconnecting to Redis in ${delay}ms (attempt ${retries})...`);
+          return delay;
+        },
+        connectTimeout: 10000,
+      }
     });
 
-    this.client.on("error", (err) => console.error(`Redis Client Error (${process.env.REDIS_HOST} | ${(process.env.REDIS_PASSWORD ?? "").length})`, err));
-    this.client.on("connect", () => console.log("Redis Client Connected"));
+    this.client.on("error", (err) => {
+      console.error('Redis Client Error:', err.message);
+    });
+    
+    this.client.on("reconnecting", () => {
+      console.log("🔄 Redis client reconnecting...");
+    });
+    
+    this.client.on("ready", () => {
+      console.log("✅ Redis client ready");
+    });
+    
+    this.client.on("connect", () => {
+      console.log("🔗 Redis Client Connected");
+    });
   }
 
   async connect(): Promise<void> {
@@ -152,64 +177,84 @@ export class RedisService {
 
   /**
    * Retrieve and decrypt a secret
+   * Implements timing-safe retrieval to prevent timing attacks
    */
   async retrieveSecret(
     retrievalId: string,
     password: string
   ): Promise<{ secret: string; viewsRemaining?: number }> {
     await this.connect();
+    const startTime = Date.now();
 
-    const key = `secret:${retrievalId}`;
-    const encrypted = await this.client.get(key);
+    try {
+      const key = `secret:${retrievalId}`;
+      const encrypted = await this.client.get(key);
 
-    if (!encrypted) {
-      throw new Error("Secret not found or expired");
-    }
-
-    const data = this.cryptoService.decryptWithSystemKey(encrypted);
-    const submittedSecret: SubmittedSecret = JSON.parse(data);
-
-    // Check if expired
-    if (Date.now() > submittedSecret.expiresAt) {
-      await this.client.del(key);
-      throw new Error("Secret has expired");
-    }
-
-    // Verify password
-    if (
-      !this.cryptoService.verifyPassword(password, submittedSecret.passwordHash)
-    ) {
-      throw new Error("Invalid password");
-    }
-
-    // Decrypt the secret
-    const secret = this.cryptoService.dualDecrypt(
-      submittedSecret.encryptedSecret,
-      password
-    );
-
-    // Handle view limit
-    if (submittedSecret.viewsRemaining !== undefined) {
-      submittedSecret.viewsRemaining -= 1;
-
-      if (submittedSecret.viewsRemaining <= 0) {
-        // Delete the secret
-        await this.client.del(key);
-        return { secret, viewsRemaining: 0 };
-      } else {
-        // Update the secret with decremented view count
-        const updatedData = JSON.stringify(submittedSecret);
-        const updatedEncrypted =
-          this.cryptoService.encryptWithSystemKey(updatedData);
-        const ttl = await this.client.ttl(key);
-        await this.client.set(key, updatedEncrypted, {
-          EX: ttl > 0 ? ttl : MAX_EXPIRY_DAYS * SECONDS_PER_DAY,
-        });
-        return { secret, viewsRemaining: submittedSecret.viewsRemaining };
+      if (!encrypted) {
+        // Add artificial delay to match valid secret path
+        await new Promise(resolve => 
+          setTimeout(resolve, 50 + Math.random() * 50)
+        );
+        throw new Error("Invalid password or secret not found");
       }
-    }
 
-    return { secret };
+      const data = this.cryptoService.decryptWithSystemKey(encrypted);
+      const submittedSecret: SubmittedSecret = JSON.parse(data);
+
+      // Check if expired
+      if (Date.now() > submittedSecret.expiresAt) {
+        await this.client.del(key);
+        throw new Error("Secret has expired");
+      }
+
+      // Verify password with timing-safe comparison
+      const isValidPassword = this.cryptoService.verifyPassword(
+        password, 
+        submittedSecret.passwordHash
+      );
+
+      if (!isValidPassword) {
+        throw new Error("Invalid password or secret not found");
+      }
+
+      // Decrypt the secret
+      const secret = this.cryptoService.dualDecrypt(
+        submittedSecret.encryptedSecret,
+        password
+      );
+
+      // Handle view limit
+      if (submittedSecret.viewsRemaining !== undefined) {
+        submittedSecret.viewsRemaining -= 1;
+
+        if (submittedSecret.viewsRemaining <= 0) {
+          // Delete the secret
+          await this.client.del(key);
+          return { secret, viewsRemaining: 0 };
+        } else {
+          // Update the secret with decremented view count
+          const updatedData = JSON.stringify(submittedSecret);
+          const updatedEncrypted =
+            this.cryptoService.encryptWithSystemKey(updatedData);
+          const ttl = await this.client.ttl(key);
+          await this.client.set(key, updatedEncrypted, {
+            EX: ttl > 0 ? ttl : MAX_EXPIRY_DAYS * SECONDS_PER_DAY,
+          });
+          return { secret, viewsRemaining: submittedSecret.viewsRemaining };
+        }
+      }
+
+      return { secret };
+    } catch (error) {
+      // Ensure minimum response time for timing attack protection
+      const elapsed = Date.now() - startTime;
+      if (elapsed < 100) {
+        await new Promise(resolve => 
+          setTimeout(resolve, 100 - elapsed)
+        );
+      }
+      throw error;
+    }
   }
 
   /**

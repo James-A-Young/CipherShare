@@ -1,8 +1,15 @@
 node_modules
 dist
-.env
-.env.prod
 .DS_Store
+
+# Environment files (keep .env.example and .env.production.example)
+.env
+.env.local
+.env.*.local
+.env.prod
+.env.production
+.env.staging
+.env.development.local
 *.log
 coverage
 .vscode

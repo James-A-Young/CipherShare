@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import cors from "cors";
+import helmet from "helmet";
 import dotenv from "dotenv";
 import crypto from "node:crypto";
 import { CryptoService } from "./crypto.service.js";
@@ -21,8 +22,32 @@ import {
   SecretRetrievalResponse,
 } from "./types.js";
 import { verifyTurnstile, isFeatureEnabled } from "./utils.js";
+import {
+  ValidationError,
+  validateEmail,
+  validateDescription,
+  validateReference,
+  validateSecret,
+  validatePassword,
+  validateRetention,
+} from "./validation.js";
 
 dotenv.config();
+
+// Validate required environment variables
+const requiredEnvVars = ['SYSTEM_SECRET_KEY', 'EMAIL_FROM'];
+const missing = requiredEnvVars.filter(key => !process.env[key]);
+if (missing.length > 0) {
+  console.error(`❌ CRITICAL: Missing required environment variables: ${missing.join(', ')}`);
+  process.exit(1);
+}
+
+// Validate SYSTEM_SECRET_KEY format
+if (!process.env.SYSTEM_SECRET_KEY || process.env.SYSTEM_SECRET_KEY.length !== 64) {
+  console.error('❌ CRITICAL: SYSTEM_SECRET_KEY must be exactly 64 hex characters (32 bytes)');
+  console.error('Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+  process.exit(1);
+}
 
 // Read Cloudflare Turnstile keys from environment
 // CF_TURNSTILE_SITEKEY is non-secret and will be exposed to the browser via
@@ -46,12 +71,73 @@ app.disable('x-powered-by');
 const PORT = process.env.PORT || 3001;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
-if (process.env.PROXY_LAYERS) {
-    app.set('trust proxy', parseInt(process.env.PROXY_LAYERS));
+// Trust proxy configuration (important for rate limiting and IP detection)
+const proxyLayers = process.env.PROXY_LAYERS 
+  ? parseInt(process.env.PROXY_LAYERS) 
+  : 1; // Default to 1 for common Docker/K8s setups
+
+if (proxyLayers > 0) {
+  app.set('trust proxy', proxyLayers);
+  console.log(`🔧 Trusting ${proxyLayers} proxy layer(s)`);
 }
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://challenges.cloudflare.com"],
+      frameSrc: ["https://challenges.cloudflare.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "data:"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+// CORS configuration with origin whitelist
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const allowedOrigins = process.env.ALLOWED_ORIGINS 
+      ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+      : [CLIENT_URL];
+    
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS: Blocked origin ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+  maxAge: 86400 // 24 hours
+};
+
+app.use(cors(corsOptions));
+
+// Body parser with size limits to prevent DoS
+app.use(express.json({ 
+  limit: '100kb',
+  strict: true,
+  type: 'application/json'
+}));
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '100kb' 
+}));
 app.use("/api", generalLimiter); // Apply general rate limiting to all API routes
 // Static assets
 app.use(express.static(path.join(__dirname, "..", "dist")));
@@ -62,10 +148,8 @@ app.get(/^\/(?!api\/).*/, (req: Request, res: Response, next: Function) => {
   res.sendFile(path.join(__dirname, "..", "dist", "index.html"));
 });
 // Services
-const cryptoService = new CryptoService(
-  process.env.SYSTEM_SECRET_KEY ||
-    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-);
+// SYSTEM_SECRET_KEY is validated at startup, safe to use directly
+const cryptoService = new CryptoService(process.env.SYSTEM_SECRET_KEY!);
 const redisService = new RedisService(cryptoService);
 
 // Email service configuration
@@ -81,8 +165,8 @@ const emailService = new EmailService({
 });
 
 // Health check
-app.get("/api/health", (req: Request, res: Response) => {
-  res.json({ status: "ok", timestamp: Date.now(), source: req.ip});
+app.get("/api/health", (_req: Request, res: Response) => {
+  res.json({ status: "ok", timestamp: Date.now() });
 });
 
 // Expose application metadata and configuration to the client
@@ -107,6 +191,19 @@ app.post(
         retentionValue,
       } = req.body;
 
+      // Input validation
+      try {
+        validateEmail(requestorEmail);
+        validateDescription(description);
+        validateReference(reference);
+        validateRetention(retentionType, retentionValue);
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          return res.status(400).json({ error: error.message });
+        }
+        throw error;
+      }
+
       // Validate CAPTCHA if enabled
       if (CAPTCHA_ENABLED) {
         const { turnstileToken } = req.body;
@@ -123,30 +220,6 @@ app.post(
         if (!captchaValid) {
           return res.status(401).json({ error: "CAPTCHA validation failed" });
         }
-      }
-
-      // Validation
-      if (
-        !requestorEmail ||
-        !description ||
-        !retentionType ||
-        !retentionValue
-      ) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-
-      if (retentionType !== "view" && retentionType !== "time") {
-        return res.status(400).json({ error: "Invalid retention type" });
-      }
-
-      if (retentionType === "view" && ![1, 2].includes(retentionValue)) {
-        return res.status(400).json({ error: "View limit must be 1 or 2" });
-      }
-
-      if (retentionType === "time" && ![3, 5, 10].includes(retentionValue)) {
-        return res
-          .status(400)
-          .json({ error: "Time limit must be 3, 5, or 10 days" });
       }
 
       // Generate request ID and retrieval ID upfront
@@ -222,19 +295,20 @@ app.post(
         secret,
       }: SecretSubmissionRequest = req.body;
 
-      // Validation
-      if (!submitterEmail || !password || !confirmPassword || !secret) {
-        return res.status(400).json({ error: "Missing required fields" });
+      // Input validation
+      try {
+        validateEmail(submitterEmail);
+        validatePassword(password);
+        validateSecret(secret);
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          return res.status(400).json({ error: error.message });
+        }
+        throw error;
       }
 
       if (password !== confirmPassword) {
         return res.status(400).json({ error: "Passwords do not match" });
-      }
-
-      if (password.length < 8) {
-        return res
-          .status(400)
-          .json({ error: "Password must be at least 8 characters" });
       }
 
       const request = await redisService.getSecretRequest(requestId);

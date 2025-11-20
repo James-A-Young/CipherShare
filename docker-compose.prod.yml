@@ -43,23 +43,33 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       
-      # Encryption
+      # Encryption (REQUIRED)
       - SYSTEM_SECRET_KEY=${SYSTEM_SECRET_KEY}
       
-      # Email provider
+      # Email configuration (Optional)
       - EMAIL_PROVIDER=${EMAIL_PROVIDER:-sendgrid}
       - EMAIL_FROM=${EMAIL_FROM}
       
-      # SendGrid
+      # SendGrid (if using)
       - SENDGRID_API_KEY=${SENDGRID_API_KEY}
       
-      # Mailgun
+      # Mailgun (if using)
       - MAILGUN_API_KEY=${MAILGUN_API_KEY}
       - MAILGUN_DOMAIN=${MAILGUN_DOMAIN}
       
       # Server configuration
       - PORT=3001
       - CLIENT_URL=${CLIENT_URL}
+      
+      # Security configuration
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - PROXY_LAYERS=${PROXY_LAYERS:-1}
+      
+      # CAPTCHA configuration (optional)
+      - CAPTCHA_ENABLED=${CAPTCHA_ENABLED:-true}
+      - CF_TURNSTILE_SITEKEY=${CF_TURNSTILE_SITEKEY}
+      - CF_TURNSTILE_SECRET=${CF_TURNSTILE_SECRET}
+      - CF_TURNSTILE_ALLOWED_HOSTNAMES=${CF_TURNSTILE_ALLOWED_HOSTNAMES}
     depends_on:
       redis:
         condition: service_healthy
